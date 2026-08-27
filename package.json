@@ -1,0 +1,13 @@
+{
+  "name": "agent-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "detect": "bun run src/cli.ts detect",
+    "index": "bun run src/cli.ts index",
+    "serve": "bun run src/cli.ts serve",
+    "audit": "bun run src/cli.ts audit",
+    "test": "bun test"
+  }
+}

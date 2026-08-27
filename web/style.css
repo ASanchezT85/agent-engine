@@ -1,0 +1,313 @@
+/*
+  Motor Agéntico — instrumento de medición, no dashboard SaaS.
+  Tipografías locales de Windows (cero red): Bahnschrift para cifras y titulares,
+  Segoe UI Variable Text para prosa, Cascadia Mono para datos e identificadores.
+  Un solo acento. Jerarquía por espacio y peso, no por cajas.
+*/
+:root {
+  /* light-dark(claro, oscuro): una sola definicion por color.
+     El tema lo decide `color-scheme`, y el toggle solo cambia esa propiedad. */
+  color-scheme: light dark;
+
+  --ink:        light-dark(#22201d, #ece7df);
+  --ink-strong: light-dark(#100f0d, #fbf8f4);
+  --muted:      light-dark(#6d665d, #8d857a);
+  --faint:      light-dark(#767065, #857e72);   /* AA 4.5:1 en ambos temas */
+  --bg:         light-dark(#faf7f2, #14120f);
+  --surface:    light-dark(#ffffff, #1b1815);
+  --rule:       light-dark(#e3ddd3, #2b2621);
+  --accent:     light-dark(#b64a22, #e0714a);
+  --accent-dim: light-dark(#eabfae, #7d3d28);
+  --ok:         light-dark(#46702f, #6f9e5c);
+  --warn:       light-dark(#8a6410, #c79226);
+  --high:       light-dark(#a8331f, #d1533f);
+
+  --display: Bahnschrift, "DIN Alternate", "Franklin Gothic Medium", sans-serif;
+  --text: "Segoe UI Variable Text", "Segoe UI", Selawik, sans-serif;
+  --mono: "Cascadia Mono", Consolas, ui-monospace, monospace;
+
+  --gutter: clamp(20px, 4vw, 44px);
+}
+
+/* eleccion explicita del usuario; sin atributo manda el sistema */
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"]  { color-scheme: dark; }
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.55 var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- cabecera ---------- */
+header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 16px; flex-wrap: wrap;
+  padding: 22px var(--gutter) 14px;
+}
+.brand {
+  font-family: var(--display);
+  font-size: 19px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ink-strong);
+  display: flex; align-items: baseline; gap: 11px;
+}
+.brand em {
+  font: 400 11px/1 var(--mono); font-style: normal;
+  letter-spacing: 0; text-transform: none; color: var(--muted);
+}
+.head-actions { display: flex; gap: 14px; align-items: center; }
+
+/* ---------- navegación: una regla, no ocho botones ---------- */
+nav {
+  display: flex; gap: 2px; flex-wrap: wrap;
+  padding: 0 var(--gutter);
+  border-bottom: 1px solid var(--rule);
+}
+nav button {
+  appearance: none; background: none; border: 0;
+  padding: 9px 0; margin-right: 24px;
+  font: 500 13px/1 var(--text); color: var(--muted);
+  letter-spacing: .01em; cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+nav button:hover { color: var(--ink); }
+nav button.on { color: var(--ink-strong); border-bottom-color: var(--accent); }
+
+main { padding: 30px var(--gutter) 60px; max-width: 1240px; }
+footer {
+  padding: 16px var(--gutter) 26px;
+  font: 400 11.5px/1.5 var(--mono); color: var(--faint);
+  border-top: 1px solid var(--rule);
+}
+
+/* ---------- ancla: la cifra manda ---------- */
+.anchor { margin-bottom: 34px; }
+.anchor .label {
+  font: 500 11px/1 var(--text); letter-spacing: .14em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 6px;
+}
+.anchor .figure {
+  font-family: var(--display);
+  font-size: clamp(52px, 9vw, 96px); line-height: .92; font-weight: 600;
+  letter-spacing: -.015em; color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.anchor .caption { color: var(--muted); font-size: 13px; margin-top: 8px; max-width: 62ch; }
+
+/* ---------- métricas: una fila leída, no un mosaico ---------- */
+/* separadores por BORDE, no por hueco de fondo: si la ultima fila queda incompleta,
+   el fondo del contenedor asomaba como una banda gris (se ve al imprimir) */
+.metrics {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  border-block: 1px solid var(--rule);
+}
+.metric {
+  padding: 13px 16px 15px; border-right: 1px solid var(--rule);
+}
+.metric:first-child { padding-inline-start: 0; }
+.metric:last-child { border-right: 0; }
+.metric .k {
+  font: 500 10.5px/1 var(--text); letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted);
+}
+.metric .v {
+  font: 600 25px/1.15 var(--display); color: var(--ink-strong);
+  font-variant-numeric: tabular-nums; margin-top: 7px;
+}
+.metric .s { font: 400 11.5px/1.4 var(--mono); color: var(--faint); margin-top: 3px; }
+
+/* ---------- secciones ---------- */
+h2 {
+  font: 500 11.5px/1 var(--text); letter-spacing: .14em; text-transform: uppercase;
+  color: var(--muted); margin: 38px 0 14px;
+  padding-bottom: 7px; border-bottom: 1px solid var(--rule);
+}
+h2:first-child { margin-top: 0; }
+.scroll { overflow-x: auto; overscroll-behavior-x: contain; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; align-items: start; }
+@media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; gap: 8px; } }
+
+/* ---------- tablas: densas y legibles ---------- */
+table { width: 100%; min-width: 520px; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+th {
+  text-align: left; font: 500 10.5px/1 var(--text); letter-spacing: .1em; text-transform: uppercase;
+  color: var(--faint); padding: 0 14px 8px 0; white-space: nowrap; border-bottom: 1px solid var(--rule);
+}
+td { padding: 7px 14px 7px 0; border-bottom: 1px solid color-mix(in srgb, var(--rule) 55%, transparent); }
+th:last-child, td:last-child { padding-right: 0; }
+tr:last-child td { border-bottom: 0; }
+tbody tr:hover td { background: var(--surface); }
+.num { text-align: right; font-family: var(--mono); font-size: 12.5px; }
+.trunc { max-width: 380px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.click { cursor: pointer; }
+.click:hover td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
+code, .mono { font-family: var(--mono); font-size: 12px; }
+
+/* ---------- barras: la comparación, sin decoración ---------- */
+.rows { display: flex; flex-direction: column; gap: 11px; }
+.row-label {
+  display: flex; justify-content: space-between; gap: 14px;
+  font-size: 12.5px; margin-bottom: 5px;
+}
+.row-label .num { color: var(--ink-strong); }
+.bar { height: 3px; background: var(--rule); }
+.bar > i { display: block; height: 100%; background: var(--accent-dim); }
+.rows > div:first-child .bar > i { background: var(--accent); }
+
+/* ---------- misc ---------- */
+button.action {
+  background: none; border: 1px solid var(--rule); color: var(--ink);
+  padding: 6px 13px; font: 500 12px/1 var(--text); cursor: pointer;
+}
+button.action:hover { border-color: var(--accent); color: var(--ink-strong); }
+button.action:disabled { color: var(--faint); cursor: progress; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.pill { font: 400 11px/1 var(--mono); color: var(--muted); }
+.pill.live { color: var(--ok); }
+.pill.live::before { content: "● "; }
+.tag {
+  display: inline-block; font: 400 11.5px/1.5 var(--mono);
+  color: var(--muted); margin-right: 12px; white-space: nowrap;
+}
+.muted { color: var(--muted); }
+.note { color: var(--muted); font-size: 12.5px; max-width: 76ch; margin: 10px 0 0; }
+.redacted { color: var(--warn); }
+
+.rec { padding: 14px 0 15px; border-bottom: 1px solid var(--rule); }
+.rec:last-of-type { border-bottom: 0; }
+.rec b {
+  display: block; margin-bottom: 4px; font-weight: 600; color: var(--ink-strong);
+  font-size: 14px;
+}
+.rec .sev {
+  font: 500 10px/1 var(--text); letter-spacing: .12em; text-transform: uppercase;
+  margin-bottom: 7px; display: block;
+}
+.rec.high .sev { color: var(--high); }
+.rec.warn .sev { color: var(--warn); }
+.rec.info .sev { color: var(--muted); }
+
+details summary { cursor: pointer; color: var(--faint); font: 400 11.5px/1 var(--mono); margin-top: 9px; }
+details summary:hover { color: var(--accent); }
+pre {
+  background: var(--surface); padding: 12px 14px; overflow: auto;
+  font: 400 11.5px/1.5 var(--mono); max-height: 300px; margin: 9px 0 0;
+  border-left: 1px solid var(--rule); white-space: pre-wrap; word-break: break-word;
+}
+input, select {
+  background: var(--surface); color: var(--ink); border: 1px solid var(--rule);
+  padding: 6px 10px; font: 400 13px/1.3 var(--text);
+}
+input:focus, select:focus { border-color: var(--accent); }
+.filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+.filters label { font-size: 12px; color: var(--muted); }
+
+svg text { fill: var(--faint); font-family: var(--mono); font-size: 10px; }
+.hours { display: flex; align-items: flex-end; gap: 2px; height: 120px; }
+.hours > i { flex: 1; background: var(--accent-dim); min-height: 1px; }
+.axis { display: flex; justify-content: space-between; font: 400 10.5px/1 var(--mono); color: var(--faint); margin-top: 6px; }
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:visited { color: var(--accent-dim); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* ---------- presets de fecha ---------- */
+.chips { display: inline-flex; gap: 0; border: 1px solid var(--rule); }
+.chip {
+  appearance: none; background: none; border: 0; border-right: 1px solid var(--rule);
+  color: var(--muted); padding: 6px 11px; font: 500 12px/1 var(--text); cursor: pointer;
+}
+.chip:last-child { border-right: 0; }
+.chip:hover { color: var(--ink); }
+.chip.on { background: var(--accent); color: var(--bg); }
+.filters select { max-width: 260px; }
+
+/* ---------- impresion / PDF ----------
+   Lo hace el navegador: nada de librerias ni Chrome headless. Se imprime lo que
+   se esta viendo, con el filtro que sea, en claro y sin los controles. */
+.print-only { display: none; }
+
+@media print {
+  :root { color-scheme: light; }
+  @page { margin: 14mm 12mm; }
+
+  body { background: #fff; color: #14120f; font-size: 10.5pt; }
+  header, nav, .no-print, .filters, details, .chips { display: none !important; }
+  /* los botones no sirven en papel, pero el aviso de "mostrando N de M" SI: no se oculta */
+  button { display: none !important; }
+  .print-only { display: block; }
+  main { padding: 0; max-width: none; }
+  footer { border: 0; padding: 12px 0 0; color: #666; font-size: 8pt; }
+
+  .print-head { border-bottom: 1.5px solid #14120f; padding-bottom: 10px; margin-bottom: 18px; }
+  .print-head h1 { font: 600 20pt/1.1 var(--display); margin: 0 0 6px; letter-spacing: .01em; }
+  .print-head dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; margin: 0; font-size: 9pt; }
+  .print-head dt { color: #666; }
+  .print-head dd { margin: 0; }
+
+  .anchor .figure { color: #14120f; font-size: 34pt; }
+  .anchor { margin-bottom: 18px; }
+  .metrics { border-color: #999; }
+  .metric { border-right-color: #ddd; }
+  .metric .v { font-size: 15pt; }
+
+  h2 { color: #14120f; border-bottom-color: #ccc; margin-top: 20px; break-after: avoid; }
+  .grid2 { gap: 20px; }
+  /* en pantalla la tabla scrollea; en papel no hay scroll, asi que TIENE que caber:
+     sin esto se recortan las ultimas columnas y se pierden tokens y coste */
+  /* separate en vez de collapse: con bordes colapsados, al empujar una fila entera a la
+     pagina siguiente Chrome deja un fragmento de borde suelto al pie */
+  table { font-size: 8pt; min-width: 0; width: 100%; table-layout: fixed;
+          border-collapse: separate; border-spacing: 0; }
+  th { color: #444; border-bottom-color: #999; white-space: normal; word-break: break-word; }
+  td { border-bottom-color: #ddd; word-break: break-word; padding-right: 8px; }
+  /* Chrome dibuja los glifos que caen en fuente de respaldo (la tilde de DURACION) en la
+     coordenada de la cabecera ORIGINAL, no la de la repetida en cada pagina: el acento se
+     quedaba suelto al pie. Una fuente que cubra todo el texto de la cabecera lo evita. */
+  th { padding-right: 8px; }
+  .scroll { overflow: visible; }
+
+  /* BUG CONOCIDO DE CHROME: en una tabla que cruza paginas, `thead` se repite (bien), pero
+     los glifos no-ASCII de esa cabecera repetida (la N de TAMANO, la O de DURACION) se
+     dibujan en la coordenada de la cabecera ORIGINAL y aparecen sueltos al pie de la pagina,
+     como una marca de ~1mm. Probado sin exito: fuente estatica, fuente empotrable (OFL),
+     borde superior en vez de inferior y `border-collapse: separate`.
+     Lo unico que lo elimina es no repetir la cabecera. Si la marca molesta mas que perder
+     los rotulos en las paginas 2+, descomenta esto:
+        thead { display: table-row-group; } */
+  /* la lista de barras se mantiene entera: partida, deja una barra huerfana lejos de
+     su titulo (y un sliver del bloque cortado al pie de la pagina anterior) */
+  tr, .rec, .metric, .rows, .anchor, .print-head { break-inside: avoid; }
+  .bar { background: #eee; }
+  .bar > i { background: #999; }
+  svg { break-inside: avoid; }
+  svg text { fill: #666; }
+  a { color: inherit; text-decoration: none; }
+  .trunc { max-width: none; white-space: normal; }
+}
+
+/* ---------- campo de fecha propio ----------
+   El <input type="date"> nativo impone el formato del locale del navegador (mm/dd/aaaa
+   aqui). Se escribe en un campo de texto dd/mm/aaaa y el date queda solo para abrir el
+   calendario del sistema con showPicker(). */
+.datefield { display: inline-flex; align-items: stretch; }
+.datefield input[type="text"] { border-right: 0; font-variant-numeric: tabular-nums; }
+.datefield input[type="text"].bad { border-color: var(--high); color: var(--high); }
+.datefield input[type="date"] {
+  position: absolute; width: 0; height: 0; padding: 0; border: 0;
+  opacity: 0; pointer-events: none;
+}
+.cal {
+  background: var(--surface); color: var(--muted);
+  border: 1px solid var(--rule); border-left: 0;
+  padding: 0 8px; cursor: pointer; font: 400 11px/1 var(--text);
+}
+.cal:hover { color: var(--accent); border-color: var(--accent); }

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Motor Agéntico</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header>
+  <div class="brand">Motor Agéntico <em id="tagline"></em></div>
+  <div class="head-actions no-print">
+    <span id="live" class="pill"></span>
+    <button id="lang" class="action"></button>
+    <button id="theme" class="action"></button>
+    <button id="export" class="action"></button>
+    <button id="pdf" class="action"></button>
+    <button id="reindex" class="action"></button>
+  </div>
+</header>
+
+<nav id="tabs" class="no-print">
+  <button data-view="overview" class="on"></button>
+  <button data-view="costs"></button>
+  <button data-view="sessions"></button>
+  <button data-view="activity"></button>
+  <button data-view="cursor"></button>
+  <button data-view="memory"></button>
+  <button data-view="skills"></button>
+  <button data-view="graph"></button>
+  <button data-view="advice"></button>
+</nav>
+
+<main id="app"></main>
+<footer id="foot" class="muted"></footer>
+<script src="/i18n.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>
