@@ -61,7 +61,7 @@ PORT=4824 bun run serve
 | `bun run detect` | Lists the tools it finds, without touching the database |
 | `bun run index` | Incremental indexing |
 | `bun run audit` | Verifies the read-only guard and regenerates the recommendations |
-| `bun test` | 30 tests |
+| `bun test` | 31 tests |
 
 The **Reindex** button in the dashboard runs an incremental pass without restarting anything.
 
@@ -72,7 +72,7 @@ The **Reindex** button in the dashboard runs an incremental pass without restart
 | Tool | Where it reads from | What it gets |
 |---|---|---|
 | **Claude Code** | `~/.claude/projects/**/*.jsonl` | tokens, cost, models, tool calls, skills, subagents, MCP, memory |
-| **Cursor** | `AppData/Roaming/Cursor/User/globalStorage/state.vscdb` and `~/.cursor/ai-tracking/ai-code-tracking.db` | sessions, models, tool calls, lines written, % AI authorship per commit |
+| **Cursor** | `state.vscdb` in Cursor's `globalStorage` (Windows / macOS / Linux) and `~/.cursor/ai-tracking/ai-code-tracking.db` | sessions, models, tool calls, lines written, % AI authorship per commit |
 | **OpenAI Codex CLI** | `~/.codex/sessions/**/rollout-*.jsonl` | tokens, cost, model, reasoning effort, tool calls |
 | **OpenCode** | `~/.local/share/opencode/storage/**` (honours `XDG_DATA_HOME`) | tokens, **its own computed cost**, model, agent, tool calls |
 
@@ -84,10 +84,12 @@ OpenCode were written against the format verified by reading each project's sour
 installation**, because the author does not use them. If their format has since changed, you
 will see sessions without tokens — never invented data.
 
-**Operating systems:** developed and tested on Windows 11. The Claude Code, Codex and OpenCode
-paths are cross-platform; **the Cursor one assumes Windows** (`AppData/Roaming`). On macOS or
-Linux everything else works and Cursor shows as not detected until someone adds its path in
-`src/providers/cursor.ts`.
+**Operating systems:** all four adapters resolve their paths per platform. Cursor is a VS Code
+fork, so its `globalStorage` follows the Electron layout: `%APPDATA%\Cursor` on Windows,
+`~/Library/Application Support/Cursor` on macOS, `${XDG_CONFIG_HOME:-~/.config}/Cursor` on
+Linux. All candidates are probed and the first one that exists wins. Developed and tested on
+Windows 11; the macOS and Linux paths are covered by unit tests but have not been run against a
+real installation on those systems.
 
 ---
 
@@ -207,7 +209,7 @@ src/core/export.ts         JSON and CSV export
 src/providers/*.ts         one adapter per tool + registry
 src/server/server.ts       HTTP API + static files
 web/                       dashboard (HTML/CSS/JS, hand-rolled SVG charts, no frameworks)
-test/engine.test.ts        30 tests
+test/engine.test.ts        31 tests
 ```
 
 **The backend sends no prose.** Provider notes and recommendations travel as a translation key
@@ -291,7 +293,6 @@ See **[CONTRIBUTING.md](CONTRIBUTING.md)** for how to get set up, the rules that
 negotiation (never write into a tool's folder, never invent a number), how to add a provider,
 and what is most wanted:
 
-- Cursor paths on macOS/Linux — the only thing tying this project to Windows;
 - confirmation of the Codex and OpenCode adapters against real installations;
 - new or corrected rates in `config/pricing.json`;
 - a provider for another agent.

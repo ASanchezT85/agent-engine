@@ -6,8 +6,35 @@ import { redact } from "../core/redact";
 import type { Provider } from "../core/types";
 
 export const CURSOR_HOME = join(HOME, ".cursor");
-const GLOBAL_STORAGE = join(HOME, "AppData", "Roaming", "Cursor", "User", "globalStorage");
-const STATE_DB = join(GLOBAL_STORAGE, "state.vscdb");
+
+/**
+ * Cursor es un fork de VS Code, asi que su `globalStorage` sigue el layout de Electron,
+ * que cambia por sistema operativo. En Linux, Electron respeta XDG_CONFIG_HOME.
+ *
+ *   Windows  %APPDATA%\Cursor\User\globalStorage
+ *   macOS    ~/Library/Application Support/Cursor/User/globalStorage
+ *   Linux    ${XDG_CONFIG_HOME:-~/.config}/Cursor/User/globalStorage
+ *
+ * Se prueban todas y gana la primera que exista: asi un Cursor instalado en una ruta
+ * no habitual (portable, WSL) tambien se encuentra si coincide con alguna.
+ */
+export function globalStorageCandidates(env = process.env, home = HOME, platform = process.platform): string[] {
+  const sufijo = ["Cursor", "User", "globalStorage"];
+  const rutas = [
+    env["APPDATA"] ? join(env["APPDATA"], ...sufijo) : join(home, "AppData", "Roaming", ...sufijo),
+    join(home, "Library", "Application Support", ...sufijo),
+    env["XDG_CONFIG_HOME"] ? join(env["XDG_CONFIG_HOME"], ...sufijo) : join(home, ".config", ...sufijo),
+  ];
+  // primero la del sistema en el que estamos; las demas quedan como respaldo
+  const preferida = platform === "win32" ? 0 : platform === "darwin" ? 1 : 2;
+  return [rutas[preferida]!, ...rutas.filter((_, i) => i !== preferida)];
+}
+
+const stateDb = () => {
+  const c = globalStorageCandidates().map((d) => join(d, "state.vscdb"));
+  return c.find(existsSync) ?? c[0]!;
+};
+
 const TRACK_DB = join(CURSOR_HOME, "ai-tracking", "ai-code-tracking.db");
 const CACHE = join(DATA_DIR, "cursor-cache");
 
@@ -41,7 +68,8 @@ export const cursorProvider: Provider = {
   label: "Cursor",
 
   detect() {
-    const hasState = existsSync(STATE_DB);
+    const state = stateDb();
+    const hasState = existsSync(state);
     const hasTrack = existsSync(TRACK_DB);
     if (!hasState && !hasTrack && !existsSync(CURSOR_HOME)) return { installed: false, root: null };
     return {
@@ -71,8 +99,9 @@ export const cursorProvider: Provider = {
     };
 
     // ---- sesiones y tool calls (state.vscdb) ----
-    if (!unchanged(STATE_DB)) {
-      const src = openCopy(STATE_DB);
+    const state = stateDb();
+    if (!unchanged(state)) {
+      const src = openCopy(state);
       if (src) {
         const heads = new Map<string, Head>();
         for (const h of src.query<Head, []>(
@@ -132,7 +161,7 @@ export const cursorProvider: Provider = {
         });
         tx();
         src.close();
-        stamp(STATE_DB);
+        stamp(state);
         files++;
       }
     }

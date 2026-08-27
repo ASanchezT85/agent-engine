@@ -8,13 +8,12 @@ import { redact, looksSecret } from "../src/core/redact";
 import { isForeign, isDenied, assertReadOnly, HOME } from "../src/core/paths";
 import { decodeProject } from "../src/providers/claude";
 import { streamLines } from "../src/core/jsonl";
-import { copyForReading, cursorProvider } from "../src/providers/cursor";
+import { copyForReading, cursorProvider, globalStorageCandidates } from "../src/providers/cursor";
 import { parseRollout, codexProvider } from "../src/providers/codex";
 import { parseSession, sessionTools, opencodeProvider } from "../src/providers/opencode";
 import { openDb } from "../src/core/db";
 import { toCsv, sessionRows } from "../src/core/export";
 import { overview, sessions as listSessions } from "../src/core/analytics";
-import { overview } from "../src/core/analytics";
 
 const U = (o: Partial<ReturnType<typeof zero>> = {}) => ({ ...zero(), ...o });
 function zero() {
@@ -119,6 +118,35 @@ test("indexacion incremental: solo lee lo nuevo y respeta lineas parciales", () 
 
 test("proyecto codificado se decodifica a ruta legible", () => {
   expect(decodeProject("C--dev-proyectos-Demo")).toBe("C:\\dev\\proyectos\\Demo");
+});
+
+test("cursor: la ruta de globalStorage cambia por sistema operativo", () => {
+  const home = "/home/ana";
+  const es = (p: string) => p.split("\\").join("/");
+
+  // en cada sistema, la suya va primero; las otras quedan de respaldo
+  const win = globalStorageCandidates({ APPDATA: "C:/Users/ana/AppData/Roaming" }, home, "win32");
+  expect(es(win[0]!)).toBe("C:/Users/ana/AppData/Roaming/Cursor/User/globalStorage");
+
+  const mac = globalStorageCandidates({}, home, "darwin");
+  expect(es(mac[0]!)).toBe("/home/ana/Library/Application Support/Cursor/User/globalStorage");
+
+  const linux = globalStorageCandidates({}, home, "linux");
+  expect(es(linux[0]!)).toBe("/home/ana/.config/Cursor/User/globalStorage");
+
+  // Electron respeta XDG_CONFIG_HOME en Linux
+  const xdg = globalStorageCandidates({ XDG_CONFIG_HOME: "/home/ana/.conf" }, home, "linux");
+  expect(es(xdg[0]!)).toBe("/home/ana/.conf/Cursor/User/globalStorage");
+
+  // sin APPDATA en Windows se cae a la ruta por defecto
+  expect(es(globalStorageCandidates({}, home, "win32")[0]!))
+    .toBe("/home/ana/AppData/Roaming/Cursor/User/globalStorage");
+
+  // siempre se devuelven las tres: una instalacion rara se encuentra igual
+  for (const p of ["win32", "darwin", "linux"] as const) {
+    expect(globalStorageCandidates({}, home, p)).toHaveLength(3);
+    expect(new Set(globalStorageCandidates({}, home, p)).size).toBe(3);
+  }
 });
 
 test("cursor: se lee una COPIA, el original no se toca", () => {

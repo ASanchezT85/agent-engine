@@ -61,7 +61,7 @@ PORT=4824 bun run serve
 | `bun run detect` | Lista qué herramientas encuentra, sin tocar la base |
 | `bun run index` | Indexación incremental |
 | `bun run audit` | Verifica el guard de solo lectura y regenera las recomendaciones |
-| `bun test` | 30 tests |
+| `bun test` | 31 tests |
 
 El botón **Reindexar** del dashboard hace una pasada incremental sin reiniciar nada.
 
@@ -72,7 +72,7 @@ El botón **Reindexar** del dashboard hace una pasada incremental sin reiniciar 
 | Herramienta | De dónde lee | Qué obtiene |
 |---|---|---|
 | **Claude Code** | `~/.claude/projects/**/*.jsonl` | tokens, coste, modelos, tool calls, skills, subagentes, MCP, memoria |
-| **Cursor** | `AppData/Roaming/Cursor/User/globalStorage/state.vscdb` y `~/.cursor/ai-tracking/ai-code-tracking.db` | sesiones, modelos, tool calls, líneas escritas, % de autoría de IA por commit |
+| **Cursor** | `state.vscdb` en el `globalStorage` de Cursor (Windows / macOS / Linux) y `~/.cursor/ai-tracking/ai-code-tracking.db` | sesiones, modelos, tool calls, líneas escritas, % de autoría de IA por commit |
 | **OpenAI Codex CLI** | `~/.codex/sessions/**/rollout-*.jsonl` | tokens, coste, modelo, esfuerzo de razonamiento, tool calls |
 | **OpenCode** | `~/.local/share/opencode/storage/**` (respeta `XDG_DATA_HOME`) | tokens, **su propio coste calculado**, modelo, agente, tool calls |
 
@@ -84,10 +84,12 @@ proyecto (`openai/codex`, `anomalyco/opencode`) y probados con *fixtures*, pero 
 instalación real**, porque quien lo escribió no los usa. Si su formato hubiera cambiado, verás
 sesiones sin tokens; nunca datos inventados.
 
-**Sistemas operativos:** desarrollado y probado en Windows 11. Las rutas de Claude Code, Codex
-y OpenCode son multiplataforma; **la de Cursor asume Windows** (`AppData/Roaming`). En macOS o
-Linux el resto funciona y Cursor aparecerá como no detectado hasta que alguien añada su ruta en
-`src/providers/cursor.ts`.
+**Sistemas operativos:** los cuatro adapters resuelven sus rutas según la plataforma. Cursor es
+un fork de VS Code, así que su `globalStorage` sigue el layout de Electron: `%APPDATA%\Cursor`
+en Windows, `~/Library/Application Support/Cursor` en macOS y `${XDG_CONFIG_HOME:-~/.config}/Cursor`
+en Linux. Se prueban todas las candidatas y gana la primera que exista. Desarrollado y probado
+en Windows 11; las rutas de macOS y Linux tienen tests unitarios pero no se han ejecutado contra
+una instalación real en esos sistemas.
 
 ---
 
@@ -209,7 +211,7 @@ src/core/export.ts         exportación a JSON y CSV
 src/providers/*.ts         un adapter por herramienta + registro
 src/server/server.ts       API HTTP + estáticos
 web/                       dashboard (HTML/CSS/JS, gráficos SVG a mano, sin frameworks)
-test/engine.test.ts        30 tests
+test/engine.test.ts        31 tests
 ```
 
 **El backend no manda prosa.** Las notas de proveedor y las recomendaciones viajan como clave
@@ -293,7 +295,6 @@ En **[CONTRIBUTING.md](CONTRIBUTING.md)** (en inglés) están el arranque, las r
 negocian (nunca escribir en la carpeta de una herramienta, nunca inventar un número), cómo
 añadir un provider, y lo que más falta:
 
-- rutas de Cursor en macOS/Linux — lo único que ata este proyecto a Windows;
 - confirmación de los adapters de Codex y OpenCode contra instalaciones reales;
 - tarifas nuevas o corregidas en `config/pricing.json`;
 - un provider para otro agente.

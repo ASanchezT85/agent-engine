@@ -12,7 +12,7 @@ coding agents cost you. Contributions are welcome, especially the ones listed un
 ```bash
 git clone https://github.com/ASanchezT85/agent-engine.git
 cd agent-engine
-bun test        # 30 tests, no setup needed
+bun test        # 31 tests, no setup needed
 bun run serve   # dashboard on http://127.0.0.1:4823
 ```
 
@@ -107,8 +107,8 @@ line is plenty.
 
 ## What is most wanted
 
-- **Cursor paths on macOS and Linux.** The adapter currently assumes the Windows
-  `AppData/Roaming` location; it is the only thing tying this project to Windows.
+- **Running the Cursor adapter on a real macOS or Linux install.** The per-platform paths are
+  implemented and unit-tested, but nobody has pointed them at a real Cursor there yet.
 - **Confirming the Codex and OpenCode adapters against real installations.** They were written
   against the verified format and covered by fixtures, but never run on real data.
 - **New or corrected rates** in `config/pricing.json`.
