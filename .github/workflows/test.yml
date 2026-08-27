@@ -1,3 +1,7 @@
+# El badge de este workflow esta fuera del README a proposito: la cuenta tiene Actions
+# bloqueado por facturacion, el job no llega a arrancar y el badge saldria "failing"
+# sin que ningun test falle. Se vuelve a poner cuando Actions pueda correr.
+# En local: bun test  (30 tests)
 name: tests
 
 on:

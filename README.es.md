@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![tests](https://github.com/ASanchezT85/agent-engine/actions/workflows/test.yml/badge.svg)](https://github.com/ASanchezT85/agent-engine/actions/workflows/test.yml) [![license](https://img.shields.io/github/license/ASanchezT85/agent-engine?color=e0714a)](LICENSE) ![runtime](https://img.shields.io/badge/runtime-Bun-14120f?logo=bun&logoColor=white) ![dependencies](https://img.shields.io/badge/dependencies-0-e0714a)
+[![license](https://img.shields.io/github/license/ASanchezT85/agent-engine?color=e0714a)](LICENSE) ![runtime](https://img.shields.io/badge/runtime-Bun-14120f?logo=bun&logoColor=white) ![dependencies](https://img.shields.io/badge/dependencies-0-e0714a)
 
 </div>
 
