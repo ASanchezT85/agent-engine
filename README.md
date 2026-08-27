@@ -1,37 +1,34 @@
 # Motor Agéntico
 
-**Dashboard local y de solo lectura del gasto, los tokens y la actividad de tus agentes de IA.**
+**Local, read-only dashboard for your AI agents' spend, tokens and activity.**
 
-Lee lo que Claude Code, Cursor, Codex y OpenCode ya escriben en tu disco, y te dice cuánto
-consumes, en qué modelos, en qué proyectos y con qué herramientas. Todo se calcula en tu
-máquina: no hay servidor, ni cuenta, ni telemetría, ni una sola petición saliente.
+It reads what Claude Code, Cursor, Codex and OpenCode already write to your disk, and tells you
+how much you consume, on which models, in which projects and with which tools. Everything is
+computed on your machine: no server, no account, no telemetry, not a single outbound request.
 
-> **English:** local, read-only observability dashboard for AI coding agents. It parses the
-> transcripts these tools already write to disk and reports spend, tokens, sessions, tools,
-> skills and memory. Everything runs locally — no account, no telemetry, no outbound requests.
-> The UI ships in Spanish and English; this README is in Spanish.
+**English** · [Español](README.es.md)
 
 ---
 
-## Qué responde
+## What it answers
 
-- ¿Cuánto estoy gastando en IA, hoy, esta semana, este mes?
-- ¿Qué modelos uso de verdad y cuánto cuesta cada uno?
-- ¿Qué sesiones se comen el presupuesto?
-- ¿En qué se van los tokens: input, output o caché?
-- ¿Qué herramientas, skills y subagentes se están usando?
-- ¿Qué hay guardado en mi sistema de memoria?
-- ¿Qué patrones de trabajo puedo mejorar?
+- How much am I spending on AI — today, this week, this month?
+- Which models do I actually use, and what does each one cost?
+- Which sessions eat the budget?
+- Where do the tokens go: input, output or cache?
+- Which tools, skills and subagents are actually being used?
+- What is stored in my memory system?
+- Which working patterns could be improved?
 
-## Requisitos
+## Requirements
 
-- **[Bun](https://bun.sh) ≥ 1.3** — es el único requisito.
-- Alguna de las herramientas soportadas con datos en disco.
+- **[Bun](https://bun.sh) ≥ 1.3** — that is the only requirement.
+- At least one of the supported tools, with data on disk.
 
-**Sin dependencias.** No hay `npm install`, no hay `node_modules`, no hay build. El servidor,
-la base SQLite y el dashboard usan lo que Bun trae de fábrica.
+**No dependencies.** There is no `npm install`, no `node_modules`, no build step. The server,
+the SQLite database and the dashboard all use what Bun ships with.
 
-## Instalación
+## Install
 
 ```bash
 git clone https://github.com/ASanchezT85/agent-engine.git
@@ -39,252 +36,250 @@ cd agent-engine
 bun run serve
 ```
 
-Abre **http://127.0.0.1:4823**. La primera vez indexa solo; después arranca en frío.
+Open **http://127.0.0.1:4823**. The first run indexes on its own; after that it starts cold.
 
-Para usar otro puerto:
+To use a different port:
 
 ```bash
 PORT=4824 bun run serve
 ```
 
-## Comandos
+## Commands
 
-| Comando | Qué hace |
+| Command | What it does |
 |---|---|
-| `bun run serve` | Levanta el dashboard. Indexa solo si la base está vacía |
-| `bun run detect` | Lista qué herramientas encuentra, sin tocar la base |
-| `bun run index` | Indexación incremental |
-| `bun run audit` | Verifica el guard de solo lectura y regenera las recomendaciones |
+| `bun run serve` | Starts the dashboard. Indexes only if the database is empty |
+| `bun run detect` | Lists the tools it finds, without touching the database |
+| `bun run index` | Incremental indexing |
+| `bun run audit` | Verifies the read-only guard and regenerates the recommendations |
 | `bun test` | 30 tests |
 
-El botón **Reindexar** del dashboard hace una pasada incremental sin reiniciar nada.
+The **Reindex** button in the dashboard runs an incremental pass without restarting anything.
 
 ---
 
-## Herramientas soportadas
+## Supported tools
 
-| Herramienta | De dónde lee | Qué obtiene |
+| Tool | Where it reads from | What it gets |
 |---|---|---|
-| **Claude Code** | `~/.claude/projects/**/*.jsonl` | tokens, coste, modelos, tool calls, skills, subagentes, MCP, memoria |
-| **Cursor** | `AppData/Roaming/Cursor/User/globalStorage/state.vscdb` y `~/.cursor/ai-tracking/ai-code-tracking.db` | sesiones, modelos, tool calls, líneas escritas, % de autoría de IA por commit |
-| **OpenAI Codex CLI** | `~/.codex/sessions/**/rollout-*.jsonl` | tokens, coste, modelo, esfuerzo de razonamiento, tool calls |
-| **OpenCode** | `~/.local/share/opencode/storage/**` (respeta `XDG_DATA_HOME`) | tokens, **su propio coste calculado**, modelo, agente, tool calls |
+| **Claude Code** | `~/.claude/projects/**/*.jsonl` | tokens, cost, models, tool calls, skills, subagents, MCP, memory |
+| **Cursor** | `AppData/Roaming/Cursor/User/globalStorage/state.vscdb` and `~/.cursor/ai-tracking/ai-code-tracking.db` | sessions, models, tool calls, lines written, % AI authorship per commit |
+| **OpenAI Codex CLI** | `~/.codex/sessions/**/rollout-*.jsonl` | tokens, cost, model, reasoning effort, tool calls |
+| **OpenCode** | `~/.local/share/opencode/storage/**` (honours `XDG_DATA_HOME`) | tokens, **its own computed cost**, model, agent, tool calls |
 
-Una herramienta que no esté instalada aparece como *no detectada*, no se inventa nada.
+A tool that is not installed shows up as *not detected*. Nothing is invented.
 
-**Estado de madurez, con franqueza:** Claude Code y Cursor están probados contra datos reales.
-Codex y OpenCode están escritos contra el formato verificado leyendo el código fuente de cada
-proyecto (`openai/codex`, `anomalyco/opencode`) y probados con *fixtures*, pero **no contra una
-instalación real**, porque quien lo escribió no los usa. Si su formato hubiera cambiado, verás
-sesiones sin tokens; nunca datos inventados.
+**Maturity, stated plainly:** Claude Code and Cursor are tested against real data. Codex and
+OpenCode were written against the format verified by reading each project's source
+(`openai/codex`, `anomalyco/opencode`) and are covered by fixtures, but **not against a real
+installation**, because the author does not use them. If their format has since changed, you
+will see sessions without tokens — never invented data.
 
-**Sistemas operativos:** desarrollado y probado en Windows 11. Las rutas de Claude Code, Codex
-y OpenCode son multiplataforma; **la de Cursor asume Windows** (`AppData/Roaming`). En macOS o
-Linux el resto funciona y Cursor aparecerá como no detectado hasta que alguien añada su ruta en
+**Operating systems:** developed and tested on Windows 11. The Claude Code, Codex and OpenCode
+paths are cross-platform; **the Cursor one assumes Windows** (`AppData/Roaming`). On macOS or
+Linux everything else works and Cursor shows as not detected until someone adds its path in
 `src/providers/cursor.ts`.
 
 ---
 
-## La regla que gobierna todo: solo lectura
+## The rule that governs everything: read-only
 
-Las carpetas de tus herramientas (`~/.claude`, `~/.codex`, `~/.cursor`, `~/.opencode`) se
-tratan como **estrictamente de solo lectura**. No es una promesa, es una restricción del código:
+Your tools' folders (`~/.claude`, `~/.codex`, `~/.cursor`, `~/.opencode`) are treated as
+**strictly read-only**. That is not a promise, it is a constraint in the code:
 
-- Todo acceso a disco ajeno pasa por `src/core/paths.ts`, que abre con `O_RDONLY`.
-- `assertReadOnly(ruta, "write")` lanza una excepción si la ruta cae bajo una raíz externa.
-  Hay test que lo comprueba.
-- **Denylist dura por ruta**: `.credentials.json`, `.env*`, `*.key` y claves SSH ni siquiera
-  se leen.
-- Todo lo que el Motor escribe vive en `data/`, dentro del propio proyecto.
+- Every access to foreign disk goes through `src/core/paths.ts`, which opens with `O_RDONLY`.
+- `assertReadOnly(path, "write")` throws if the path falls under a foreign root. There is a
+  test for it.
+- **Hard path denylist**: `.credentials.json`, `.env*`, `*.key` and SSH keys are not even read.
+- Everything the Engine writes lives in `data/`, inside the project itself.
 
-Cursor guarda sus bases en modo WAL y las escribe mientras la app está abierta. Abrirlas en
-sitio, aunque sea en `readonly`, haría que SQLite quisiera crear un `-shm` junto al original —
-eso ya sería escribir en carpeta ajena. Por eso el adapter **copia** los `.db` (con su `-wal` y
-`-shm`) a `data/cursor-cache/` y lee la copia. Hay test que crea una base WAL de juguete y
-verifica que el directorio de origen queda byte a byte igual tras leer.
+Cursor keeps its databases in WAL mode and writes to them while the app is open. Opening them
+in place — even `readonly` — would make SQLite want to create a `-shm` next to the original,
+and that is already writing into someone else's folder. So the adapter **copies** the `.db`
+files (with their `-wal` and `-shm`) into `data/cursor-cache/` and reads the copy. A test
+creates a toy WAL database and verifies the source directory is byte-for-byte identical after
+reading.
 
-## Privacidad
+## Privacy
 
-- El servidor escucha **solo en `127.0.0.1`**.
-- Cero telemetría, cero analytics, cero dependencias en runtime.
-- **No se sube ni un transcript a ningún sitio.**
-- **No se almacena el texto de las conversaciones.** Solo el título de la sesión y el primer
-  prompt, truncado a 200 caracteres y ya redactado. Los cuerpos de los mensajes nunca entran
-  a la base.
-- Redacción de secretos (`src/core/redact.ts`) en la ingesta y otra vez al servir memoria y
-  skills: claves de Anthropic/OpenAI/GitHub/Slack/AWS/Google, JWT, claves privadas, cabeceras
-  `Authorization`/`Cookie` y asignaciones tipo `PASSWORD=`.
-- `data/` está en `.gitignore`: la base, la caché de Cursor y las exportaciones **no se suben**.
+- The server listens on **`127.0.0.1` only**.
+- Zero telemetry, zero analytics, zero runtime dependencies.
+- **Not a single transcript is uploaded anywhere.**
+- **Conversation text is not stored.** Only the session title and the first prompt, truncated to
+  200 characters and already redacted. Message bodies never enter the database.
+- Secret redaction (`src/core/redact.ts`) on ingest and again when serving memory and skills:
+  Anthropic/OpenAI/GitHub/Slack/AWS/Google keys, JWTs, private keys, `Authorization`/`Cookie`
+  headers and `PASSWORD=`-style assignments.
+- `data/` is in `.gitignore`: the database, the Cursor cache and the exports **are not pushed**.
 
-Si vas a publicar una captura del dashboard, ten en cuenta que muestra títulos de sesión y
-rutas de proyecto reales.
+If you publish a screenshot of the dashboard, keep in mind it shows real session titles and
+project paths.
 
 ---
 
-## Costes
+## Costs
 
-`config/pricing.json` es la **única** fuente de tarifas; nunca hay precios en el código. Cada
-vendor lleva su origen y su fecha de verificación:
+`config/pricing.json` is the **only** source of rates; there are never prices in the code. Each
+vendor carries its source and verification date:
 
-| Vendor | Fuente | Modelos |
+| Vendor | Source | Models |
 |---|---|---|
 | anthropic | <https://platform.claude.com/docs/en/about-claude/pricing> | Fable/Mythos 5, Opus 5→4, Sonnet 5→4, Haiku 4.5/3.5 |
 | openai | <https://developers.openai.com/api/docs/pricing> | gpt-5.6 (sol/terra/luna), 5.5, 5.4 (+mini/nano/pro), 5.3-codex, 5.2, 5.1, 5, mini, nano |
 
-Un modelo sin tarifa se marca `UNVERIFIED`, su coste cuenta como 0 y aparece como aviso en el
-dashboard y en las recomendaciones. **Nunca se inventa un precio.**
+A model with no rate is flagged `UNVERIFIED`, its cost counts as 0, and it surfaces as a warning
+in the dashboard and in the recommendations. **A price is never invented.**
 
-Para añadir o corregir una tarifa, edita `config/pricing.json` y actualiza `verifiedAt`. No
-hace falta tocar código.
+To add or fix a rate, edit `config/pricing.json` and update `verifiedAt`. No code changes needed.
 
-**Los dos vendors cobran la caché distinto, y el motor lo respeta:**
+**The two vendors charge for cache differently, and the engine respects that:**
 
-- **Anthropic** cobra la *escritura* de caché con recargo (1,25x a 5 min, 2x a 1 h) y la
-  lectura a 0,1x.
-- **OpenAI** no cobra extra la escritura: va a precio de input normal; solo la lectura es más
-  barata. Por eso sus modelos llevan `cacheWrite5m = cacheWrite1h = input`.
+- **Anthropic** charges a premium for cache *writes* (1.25x at 5 min, 2x at 1 h) and 0.1x for
+  reads.
+- **OpenAI** does not charge extra for writes: they bill at the normal input rate; only reads
+  are cheaper. That is why its models carry `cacheWrite5m = cacheWrite1h = input`.
 
-También se aplican el *fast mode* (Opus 5/4.8 y gpt-5.3-codex) y el multiplicador 1,1x de
-`inference_geo: "us"` de Anthropic.
+Fast mode (Opus 5/4.8 and gpt-5.3-codex) and Anthropic's 1.1x `inference_geo: "us"` multiplier
+are applied too.
 
-> ### Los costes son estimaciones a tarifa API
-> Si tus sesiones corrieron bajo una suscripción (Claude Pro/Max, ChatGPT Plus…), el coste
-> marginal real fue distinto — probablemente cero. **El número mide consumo, no tu factura.**
-
----
-
-## Funciones del dashboard
-
-- **Overview** — gasto de hoy / 7 / 30 días, coste por modelo y proyecto, desglose de tokens.
-- **Costes** — series diaria, semanal y mensual.
-- **Sesiones** — tabla ordenable y buscable; cada sesión se abre en detalle.
-- **Actividad** — procesos vivos, sesiones recientes, herramientas, skills, subagentes, MCP,
-  actividad por hora y por día de la semana.
-- **Cursor** — % de código escrito por IA, autoría por rama, sesiones y modelos.
-- **Memoria** — inventario de la memoria persistente, con redacción.
-- **Skills** — qué skills tienes y cuáles usas de verdad.
-- **Grafo** — proyectos ↔ herramientas / skills / subagentes.
-- **Mejoras** — recomendaciones automáticas (ver abajo).
-
-**Filtros** por rango de fechas (con presets), proveedor y proyecto. Viven en la URL, así que
-una vista concreta se comparte, se recarga y funciona con atrás/adelante del navegador.
-
-**Exportar** escribe JSON + CSV en `data/exports/`, respetando el filtro activo. El JSON declara
-qué secciones se filtraron y cuáles no, con el motivo.
-
-**PDF** imprime la vista actual con su filtro, usando el motor de impresión del navegador.
-
-**Tema** claro / oscuro / sistema, e **idioma** español / inglés con detección automática.
-
-## Sistema de mejoras
-
-Analiza lo indexado y **propone**, nunca aplica. Las recomendaciones se guardan en
-`data/recommendations.json`; el Motor jamás modifica la configuración de tus herramientas.
-
-Detecta: sesiones desproporcionadamente caras, reuso pobre de caché, contextos gigantes,
-herramientas casi sin usar, prompts repetidos candidatos a skill, proyectos con mucha ejecución
-manual de comandos, y modelos sin tarifa.
+> ### Costs are estimates at API rates
+> If your sessions ran on a subscription (Claude Pro/Max, ChatGPT Plus…), the real marginal cost
+> was different — probably zero. **The number measures consumption, not your invoice.**
 
 ---
 
-## Arquitectura
+## Dashboard features
+
+- **Overview** — spend today / 7 / 30 days, cost by model and project, token breakdown.
+- **Costs** — daily, weekly and monthly series.
+- **Sessions** — sortable, searchable table; each session opens in detail.
+- **Activity** — live processes, recent sessions, tools, skills, subagents, MCP, activity by
+  hour and by day of week.
+- **Cursor** — % of code written by AI, authorship per branch, sessions and models.
+- **Memory** — inventory of the persistent memory, redacted.
+- **Skills** — which skills you have and which you actually use.
+- **Graph** — projects ↔ tools / skills / subagents.
+- **Advice** — automatic recommendations (see below).
+
+**Filters** by date range (with presets), provider and project. They live in the URL, so a given
+view can be shared, reloaded, and navigated with the browser's back/forward.
+
+**Export** writes JSON + CSV into `data/exports/`, honouring the active filter. The JSON declares
+which sections were filtered and which were not, with the reason.
+
+**PDF** prints the current view with its filter, using the browser's own print engine.
+
+**Theme** light / dark / system, and **language** Spanish / English with auto-detection.
+
+## Recommendation engine
+
+It analyses what has been indexed and **proposes**, never applies. Recommendations are saved to
+`data/recommendations.json`; the Engine never modifies your tools' configuration.
+
+It detects: disproportionately expensive sessions, poor cache reuse, huge contexts, barely-used
+tools, repeated prompts that are skill candidates, projects with heavy manual command execution,
+and models with no rate.
+
+---
+
+## Architecture
 
 ```
-config/pricing.json        tarifas, desacopladas del código
-src/core/paths.ts          guard de solo lectura, denylist, lectura por offset
-src/core/redact.ts         detección y redacción de secretos
-src/core/pricing.ts        normalización de modelos + motor de coste
-src/core/jsonl.ts          lectura incremental de JSONL, compartida entre adapters
-src/core/db.ts             esquema SQLite
-src/core/analytics.ts      consultas de overview, costes, sesiones, actividad, grafo
-src/core/inventory.ts      skills, memoria y procesos vivos (escaneo en caliente)
-src/core/recommend.ts      sistema de mejoras
-src/core/export.ts         exportación a JSON y CSV
-src/providers/*.ts         un adapter por herramienta + registro
-src/server/server.ts       API HTTP + estáticos
-web/                       dashboard (HTML/CSS/JS, gráficos SVG a mano, sin frameworks)
+config/pricing.json        rates, decoupled from the code
+src/core/paths.ts          read-only guard, denylist, offset-based reading
+src/core/redact.ts         secret detection and redaction
+src/core/pricing.ts        model normalisation + cost engine
+src/core/jsonl.ts          incremental JSONL reading, shared across adapters
+src/core/db.ts             SQLite schema
+src/core/analytics.ts      overview, costs, sessions, activity and graph queries
+src/core/inventory.ts      skills, memory and live processes (hot scan)
+src/core/recommend.ts      recommendation engine
+src/core/export.ts         JSON and CSV export
+src/providers/*.ts         one adapter per tool + registry
+src/server/server.ts       HTTP API + static files
+web/                       dashboard (HTML/CSS/JS, hand-rolled SVG charts, no frameworks)
 test/engine.test.ts        30 tests
 ```
 
-**El backend no manda prosa.** Las notas de proveedor y las recomendaciones viajan como clave
-de traducción + números (`{ id: "cache-churn", params: { written: 833.8, read: 44310 } }`); el
-texto lo pone el front. Así no hay dos copias del mismo párrafo ni un backend decidiendo
-presentación.
+**The backend sends no prose.** Provider notes and recommendations travel as a translation key
+plus numbers (`{ id: "cache-churn", params: { written: 833.8, read: 44310 } }`); the front-end
+supplies the text. That way there are never two copies of the same paragraph, and no backend
+deciding presentation.
 
-### Indexación incremental
+### Incremental indexing
 
-`files(path, size, mtime, offset)` guarda el byte exacto hasta donde se leyó cada transcript:
+`files(path, size, mtime, offset)` stores the exact byte up to which each transcript was read:
 
-1. Si `size` y `mtime` no cambiaron → se salta el archivo entero.
-2. Si creció → se lee **solo** desde `offset`.
-3. Si encogió → se reindexa desde 0 (archivo reescrito).
-4. Una última línea sin `\n` (una sesión escribiendo ahora mismo) no se consume: el offset se
-   queda antes y esa línea se lee entera en la pasada siguiente.
+1. If `size` and `mtime` did not change → the whole file is skipped.
+2. If it grew → **only** the bytes from `offset` are read.
+3. If it shrank → reindexed from 0 (file was rewritten).
+4. A trailing line without `\n` (a session writing right now) is not consumed: the offset stops
+   before it, and that line is read whole on the next pass.
 
-Ningún archivo se carga completo en memoria: se lee en trozos de 4 MB. En la máquina de
-desarrollo, con 1,5 GB de transcripts y un archivo suelto de 402 MB, la primera indexación
-tardó ~19 minutos y las siguientes 0,4 s.
+No file is ever loaded fully into memory: it is read in 4 MB chunks. On the development machine,
+with 1.5 GB of transcripts and a single 402 MB file, the first index took ~19 minutes and later
+passes 0.4 s.
 
-### Añadir una herramienta
+### Adding a tool
 
-Implementa la interfaz `Provider` de `src/core/types.ts`:
+Implement the `Provider` interface from `src/core/types.ts`:
 
 ```ts
-export const miProvider: Provider = {
-  id: "mitool",
-  label: "Mi Herramienta",
-  detect() { /* { installed, root, note: "clave.i18n", noteParams } */ },
-  index(db) { /* devuelve { files, newBytes, messages } */ },
+export const myProvider: Provider = {
+  id: "mytool",
+  label: "My Tool",
+  detect() { /* { installed, root, note: "i18n.key", noteParams } */ },
+  index(db) { /* returns { files, newBytes, messages } */ },
 };
 ```
 
-Regístralo en `src/providers/registry.ts` y añade sus textos a `web/i18n.js`. Reglas de la
-casa: **nunca escribas** en la carpeta de la herramienta, usa `assertReadOnly`, pasa los textos
-libres por `redact()` y respeta el gate de frescura por `size`+`mtime`.
+Register it in `src/providers/registry.ts` and add its strings to `web/i18n.js`. House rules:
+**never write** into the tool's folder, use `assertReadOnly`, pass free text through `redact()`,
+and honour the `size`+`mtime` freshness gate.
 
 ---
 
-## Trampas de medición que este proyecto ya pisó
+## Measurement traps this project already hit
 
-Documentadas porque cualquiera que mida lo mismo se las va a encontrar:
+Documented because anyone measuring the same thing will run into them:
 
-- **El consumo acumulado no se suma.** El `total_token_usage` de Codex es acumulado por sesión,
-  no por turno; sumar los eventos multiplica el gasto por el número de turnos. (Es el bug de
-  inflación 91x que reportaron en `ccusage`.) Se toma el máximo.
-- **El input reportado ya incluye el cacheado.** Hay que restarlo o los tokens de caché se
-  cuentan dos veces.
-- **El filtro corta mensajes, no sesiones.** Si corta sesiones, una que roza el rango aporta su
-  coste entero y la suma deja de cuadrar con el total. Hay test que fija el invariante.
-- **La escritura de caché no cuesta lo mismo en todos los vendors.** Ver la sección de costes.
-- **Los desplegables de filtro se llenan sin filtrar.** Si se filtraran, elegir un proyecto de
-  una sola sesión vaciaría su propio desplegable y no habría cómo volver atrás.
+- **Cumulative usage must not be summed.** Codex's `total_token_usage` is cumulative per session,
+  not per turn; summing the events multiplies spend by the number of turns. (This is the 91x
+  inflation bug reported in `ccusage`.) The maximum is taken instead.
+- **Reported input already includes the cached part.** It has to be subtracted, or cache tokens
+  are counted twice.
+- **The filter cuts messages, not sessions.** If it cut sessions, one that merely grazes the
+  range would contribute its entire cost and the sum would stop matching the total. A test pins
+  the invariant.
+- **Cache writes do not cost the same across vendors.** See the costs section.
+- **Filter dropdowns are populated unfiltered.** If they were filtered, picking a project with a
+  single session would empty its own dropdown, leaving no way back.
 
-## Limitaciones conocidas
+## Known limitations
 
-- **Coste ≠ factura.** Ver arriba.
-- **Cursor no registra tokens por petición** (todos vienen en 0), así que no entra en las cifras
-  de dinero. Su pestaña mide lo que sí guarda: autoría, sesiones, modelos, herramientas.
-- El pico de contexto de una sesión de Cursor es la última medición, no un acumulado.
-- **No se empareja un PID con su sesión**: ningún campo los une. Se muestran los procesos vivos
-  y, aparte, qué sesiones escribieron en los últimos 10 minutos.
-- «Usos» de una skill cuenta invocaciones vía la herramienta `Skill`; una skill cargada por hook
-  o `SessionStart` no deja rastro.
-- Los tokens se atribuyen al día del mensaje, no al de facturación.
-- **Bug de Chrome al imprimir**: en una tabla que cruza páginas, los glifos no-ASCII de la
-  cabecera repetida (la Ó de «DURACIÓN») se dibujan en la coordenada de la cabecera original y
-  aparecen sueltos al pie como una marca de ~1 mm. Hay un interruptor comentado en
-  `web/style.css` para desactivar la repetición de cabecera si molesta más que perder los
-  rótulos.
+- **Cost ≠ invoice.** See above.
+- **Cursor records no per-request tokens** (they all come through as 0), so it stays out of the
+  money figures. Its tab measures what it does store: authorship, sessions, models, tools.
+- A Cursor session's peak context is the last measurement, not a running total.
+- **A PID is not matched to its session**: no field ties them together. Live processes are shown,
+  and separately, which sessions wrote in the last 10 minutes.
+- A skill's "uses" counts invocations through the `Skill` tool; a skill loaded by a hook or by
+  `SessionStart` leaves no trace.
+- Tokens are attributed to the day of the message, not to the billing day.
+- **Chrome printing bug**: in a table spanning pages, non-ASCII glyphs from the repeated header
+  (the Ó in "DURACIÓN") are drawn at the original header's coordinates and end up loose at the
+  foot of the page as a ~1 mm mark. There is a commented switch in `web/style.css` to disable
+  header repetition if the mark bothers you more than losing the labels.
 
-## Estado
+## Status
 
-Funciona y está en uso. No tiene CI, ni versionado semántico, ni promesa de compatibilidad.
-Los issues y PRs son bienvenidos, sobre todo:
+It works and is in use. There is no CI, no semantic versioning, and no compatibility promise.
+Issues and PRs are welcome, especially:
 
-- rutas de Cursor en macOS/Linux;
-- confirmación de los adapters de Codex y OpenCode contra instalaciones reales;
-- tarifas nuevas o corregidas en `config/pricing.json`.
+- Cursor paths on macOS/Linux;
+- confirmation of the Codex and OpenCode adapters against real installations;
+- new or corrected rates in `config/pricing.json`.
 
-## Licencia
+## License
 
 [MIT](LICENSE) © 2026 Alexander J Sanchez T
