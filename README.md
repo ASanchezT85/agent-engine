@@ -282,12 +282,19 @@ Documented because anyone measuring the same thing will run into them:
 
 ## Status
 
-It works and is in use. There is no CI, no semantic versioning, and no compatibility promise.
-Issues and PRs are welcome, especially:
+It works and is in use. There is no semantic versioning and no compatibility promise. Issues
+and PRs are welcome.
 
-- Cursor paths on macOS/Linux;
+## Contributing
+
+See **[CONTRIBUTING.md](CONTRIBUTING.md)** for how to get set up, the rules that are not up for
+negotiation (never write into a tool's folder, never invent a number), how to add a provider,
+and what is most wanted:
+
+- Cursor paths on macOS/Linux — the only thing tying this project to Windows;
 - confirmation of the Codex and OpenCode adapters against real installations;
-- new or corrected rates in `config/pricing.json`.
+- new or corrected rates in `config/pricing.json`;
+- a provider for another agent.
 
 ## License
 

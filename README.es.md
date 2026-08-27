@@ -284,12 +284,19 @@ Documentadas porque cualquiera que mida lo mismo se las va a encontrar:
 
 ## Estado
 
-Funciona y está en uso. No tiene CI, ni versionado semántico, ni promesa de compatibilidad.
-Los issues y PRs son bienvenidos, sobre todo:
+Funciona y está en uso. No tiene versionado semántico ni promesa de compatibilidad. Los issues
+y PRs son bienvenidos.
 
-- rutas de Cursor en macOS/Linux;
+## Contribuir
+
+En **[CONTRIBUTING.md](CONTRIBUTING.md)** (en inglés) están el arranque, las reglas que no se
+negocian (nunca escribir en la carpeta de una herramienta, nunca inventar un número), cómo
+añadir un provider, y lo que más falta:
+
+- rutas de Cursor en macOS/Linux — lo único que ata este proyecto a Windows;
 - confirmación de los adapters de Codex y OpenCode contra instalaciones reales;
-- tarifas nuevas o corregidas en `config/pricing.json`.
+- tarifas nuevas o corregidas en `config/pricing.json`;
+- un provider para otro agente.
 
 ## Licencia
 
