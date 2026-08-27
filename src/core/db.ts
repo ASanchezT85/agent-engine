@@ -3,7 +3,8 @@ import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { DATA_DIR } from "./paths";
 
-export function openDb(file = join(DATA_DIR, "engine.db")): Database {
+/** ENGINE_DB permite apuntar a otra base: util para demos, capturas y pruebas. */
+export function openDb(file = process.env["ENGINE_DB"] || join(DATA_DIR, "engine.db")): Database {
   mkdirSync(DATA_DIR, { recursive: true });
   const db = new Database(file, { create: true });
   db.exec("PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL;");

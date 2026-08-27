@@ -1,4 +1,10 @@
-# Motor Agéntico
+<p align="center"><img src="docs/banner.png" alt="Motor Agéntico" width="860"></p>
+
+<div align="center">
+
+[![tests](https://github.com/ASanchezT85/agent-engine/actions/workflows/test.yml/badge.svg)](https://github.com/ASanchezT85/agent-engine/actions/workflows/test.yml) [![license](https://img.shields.io/github/license/ASanchezT85/agent-engine?color=e0714a)](LICENSE) ![runtime](https://img.shields.io/badge/runtime-Bun-14120f?logo=bun&logoColor=white) ![dependencies](https://img.shields.io/badge/dependencies-0-e0714a)
+
+</div>
 
 **Local, read-only dashboard for your AI agents' spend, tokens and activity.**
 
@@ -7,6 +13,9 @@ how much you consume, on which models, in which projects and with which tools. E
 computed on your machine: no server, no account, no telemetry, not a single outbound request.
 
 **English** · [Español](README.es.md)
+
+<p align="center"><img src="docs/dashboard.png" alt="The Overview tab of the Motor Agéntico dashboard" width="900"></p>
+<p align="center"><sub>Overview tab. The data in the screenshot is synthetic.</sub></p>
 
 ---
 

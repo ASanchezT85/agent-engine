@@ -1,4 +1,10 @@
-# Motor Agéntico
+<p align="center"><img src="docs/banner.png" alt="Motor Agéntico" width="860"></p>
+
+<div align="center">
+
+[![tests](https://github.com/ASanchezT85/agent-engine/actions/workflows/test.yml/badge.svg)](https://github.com/ASanchezT85/agent-engine/actions/workflows/test.yml) [![license](https://img.shields.io/github/license/ASanchezT85/agent-engine?color=e0714a)](LICENSE) ![runtime](https://img.shields.io/badge/runtime-Bun-14120f?logo=bun&logoColor=white) ![dependencies](https://img.shields.io/badge/dependencies-0-e0714a)
+
+</div>
 
 **Dashboard local y de solo lectura del gasto, los tokens y la actividad de tus agentes de IA.**
 
@@ -7,6 +13,9 @@ consumes, en qué modelos, en qué proyectos y con qué herramientas. Todo se ca
 máquina: no hay servidor, ni cuenta, ni telemetría, ni una sola petición saliente.
 
 **Español** · [English](README.md)
+
+<p align="center"><img src="docs/dashboard.png" alt="La pestaña Overview del dashboard Motor Agéntico" width="900"></p>
+<p align="center"><sub>Pestaña Overview. Los datos de la captura son sintéticos.</sub></p>
 
 ---
 

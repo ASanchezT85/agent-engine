@@ -1,0 +1,19 @@
+name: tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      # No hay `bun install`: el proyecto no tiene dependencias.
+      # Los tests no necesitan ninguna herramienta de IA instalada: los adapters
+      # detectan que no estan y el resto trabaja sobre bases y ficheros temporales.
+      - run: bun test

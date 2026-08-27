@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" width="1280" height="320" font-family="Bahnschrift, 'DIN Alternate', 'Franklin Gothic Medium', sans-serif">
+  <defs>
+    <linearGradient id="fondo" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#14120f"/>
+      <stop offset="1" stop-color="#1e1a15"/>
+    </linearGradient>
+    <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e0714a" stop-opacity=".28"/>
+      <stop offset="1" stop-color="#e0714a" stop-opacity="0"/>
+    </linearGradient>
+    <!-- la serie solo vive a la derecha del texto: si lo cruza, no se lee ni una cosa ni otra -->
+    <linearGradient id="fade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0.38" stop-color="#000"/>
+      <stop offset="0.62" stop-color="#fff"/>
+    </linearGradient>
+    <mask id="soloDerecha"><rect width="1280" height="320" fill="url(#fade)"/></mask>
+  </defs>
+
+  <rect width="1280" height="320" fill="url(#fondo)"/>
+
+  <g mask="url(#soloDerecha)">
+    <path d="M0 268 L80 250 L160 258 L240 222 L320 236 L400 196 L480 208 L560 168
+             L640 182 L720 140 L800 158 L880 116 L960 132 L1040 96 L1120 112 L1200 74 L1280 88
+             L1280 320 L0 320 Z" fill="url(#area)"/>
+    <path d="M0 268 L80 250 L160 258 L240 222 L320 236 L400 196 L480 208 L560 168
+             L640 182 L720 140 L800 158 L880 116 L960 132 L1040 96 L1120 112 L1200 74 L1280 88"
+          fill="none" stroke="#e0714a" stroke-width="2.5"/>
+  </g>
+
+  <text x="80" y="132" font-size="76" font-weight="600" letter-spacing="1" fill="#fbf8f4">MOTOR</text>
+  <text x="80" y="204" font-size="76" font-weight="600" letter-spacing="1" fill="#e0714a">AGÉNTICO</text>
+
+  <text x="86" y="246" font-family="'Segoe UI', system-ui, sans-serif" font-size="19" fill="#8d857a">
+    Local, read-only dashboard for your AI agents' spend, tokens and activity
+  </text>
+
+  <g font-family="'Cascadia Mono', Consolas, monospace" font-size="13" fill="#857e72">
+    <text x="86" y="286">claude code</text>
+    <text x="214" y="286">·</text>
+    <text x="232" y="286">cursor</text>
+    <text x="304" y="286">·</text>
+    <text x="322" y="286">codex</text>
+    <text x="386" y="286">·</text>
+    <text x="404" y="286">opencode</text>
+  </g>
+
+  <g font-family="'Cascadia Mono', Consolas, monospace" font-size="13" fill="#857e72" text-anchor="end">
+    <text x="1200" y="286">no telemetry · no cloud</text>
+  </g>
+
+  <rect x="0" y="0" width="1280" height="3" fill="#e0714a"/>
+</svg>
