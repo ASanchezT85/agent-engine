@@ -284,3 +284,7 @@ Los issues y PRs son bienvenidos, sobre todo:
 - rutas de Cursor en macOS/Linux;
 - confirmación de los adapters de Codex y OpenCode contra instalaciones reales;
 - tarifas nuevas o corregidas en `config/pricing.json`.
+
+## Licencia
+
+[MIT](LICENSE) © 2026 Alexander J Sanchez T
