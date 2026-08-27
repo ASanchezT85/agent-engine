@@ -1,386 +1,286 @@
 # Motor Agéntico
 
-Dashboard local, privado y **estrictamente read-only** de observabilidad sobre Claude Code
-y el resto del ecosistema de agentes de IA de la máquina.
+**Dashboard local y de solo lectura del gasto, los tokens y la actividad de tus agentes de IA.**
 
-## Ejecutar
+Lee lo que Claude Code, Cursor, Codex y OpenCode ya escriben en tu disco, y te dice cuánto
+consumes, en qué modelos, en qué proyectos y con qué herramientas. Todo se calcula en tu
+máquina: no hay servidor, ni cuenta, ni telemetría, ni una sola petición saliente.
+
+> **English:** local, read-only observability dashboard for AI coding agents. It parses the
+> transcripts these tools already write to disk and reports spend, tokens, sessions, tools,
+> skills and memory. Everything runs locally — no account, no telemetry, no outbound requests.
+> The UI ships in Spanish and English; this README is in Spanish.
+
+---
+
+## Qué responde
+
+- ¿Cuánto estoy gastando en IA, hoy, esta semana, este mes?
+- ¿Qué modelos uso de verdad y cuánto cuesta cada uno?
+- ¿Qué sesiones se comen el presupuesto?
+- ¿En qué se van los tokens: input, output o caché?
+- ¿Qué herramientas, skills y subagentes se están usando?
+- ¿Qué hay guardado en mi sistema de memoria?
+- ¿Qué patrones de trabajo puedo mejorar?
+
+## Requisitos
+
+- **[Bun](https://bun.sh) ≥ 1.3** — es el único requisito.
+- Alguna de las herramientas soportadas con datos en disco.
+
+**Sin dependencias.** No hay `npm install`, no hay `node_modules`, no hay build. El servidor,
+la base SQLite y el dashboard usan lo que Bun trae de fábrica.
+
+## Instalación
 
 ```bash
-cd C:\laragon\www\agent-engine
-bun run serve     # dashboard -> http://127.0.0.1:4823
+git clone https://github.com/ASanchezT85/agent-engine.git
+cd agent-engine
+bun run serve
 ```
 
-`serve` indexa solo si la base está vacía. El botón **Reindexar** del dashboard hace una
-pasada incremental sin reiniciar nada.
+Abre **http://127.0.0.1:4823**. La primera vez indexa solo; después arranca en frío.
 
-El resto de comandos:
+Para usar otro puerto:
 
 ```bash
-bun run detect    # qué herramientas se detectan, sin tocar la base
-bun run index     # indexación incremental
-bun run audit     # auditoría read-only + recomendaciones
-bun test          # 30 tests
+PORT=4824 bun run serve
 ```
 
-Único requisito: **Bun** (ya instalado, v1.3.14). Cero dependencias: no hay `npm install`.
+## Comandos
 
-Tiempos medidos en esta máquina: primera indexación **19 min** (1,5 GB de transcripts);
-reindexado sin cambios **0,4 s**; con Cursor abierto **~60 s**, porque su `state.vscdb` pesa
-1 GB y hay que copiarlo entero para leerlo sin tocar el original.
+| Comando | Qué hace |
+|---|---|
+| `bun run serve` | Levanta el dashboard. Indexa solo si la base está vacía |
+| `bun run detect` | Lista qué herramientas encuentra, sin tocar la base |
+| `bun run index` | Indexación incremental |
+| `bun run audit` | Verifica el guard de solo lectura y regenera las recomendaciones |
+| `bun test` | 30 tests |
 
-Typecheck opcional (única dependencia, y solo de tipos):
-`bun add -d bun-types typescript && bunx tsc --noEmit`
+El botón **Reindexar** del dashboard hace una pasada incremental sin reiniciar nada.
 
-## Regla read-only
+---
 
-`~/.claude`, `~/.codex`, `~/.cursor` y `~/.opencode` se tratan como de solo lectura.
+## Herramientas soportadas
+
+| Herramienta | De dónde lee | Qué obtiene |
+|---|---|---|
+| **Claude Code** | `~/.claude/projects/**/*.jsonl` | tokens, coste, modelos, tool calls, skills, subagentes, MCP, memoria |
+| **Cursor** | `AppData/Roaming/Cursor/User/globalStorage/state.vscdb` y `~/.cursor/ai-tracking/ai-code-tracking.db` | sesiones, modelos, tool calls, líneas escritas, % de autoría de IA por commit |
+| **OpenAI Codex CLI** | `~/.codex/sessions/**/rollout-*.jsonl` | tokens, coste, modelo, esfuerzo de razonamiento, tool calls |
+| **OpenCode** | `~/.local/share/opencode/storage/**` (respeta `XDG_DATA_HOME`) | tokens, **su propio coste calculado**, modelo, agente, tool calls |
+
+Una herramienta que no esté instalada aparece como *no detectada*, no se inventa nada.
+
+**Estado de madurez, con franqueza:** Claude Code y Cursor están probados contra datos reales.
+Codex y OpenCode están escritos contra el formato verificado leyendo el código fuente de cada
+proyecto (`openai/codex`, `anomalyco/opencode`) y probados con *fixtures*, pero **no contra una
+instalación real**, porque quien lo escribió no los usa. Si su formato hubiera cambiado, verás
+sesiones sin tokens; nunca datos inventados.
+
+**Sistemas operativos:** desarrollado y probado en Windows 11. Las rutas de Claude Code, Codex
+y OpenCode son multiplataforma; **la de Cursor asume Windows** (`AppData/Roaming`). En macOS o
+Linux el resto funciona y Cursor aparecerá como no detectado hasta que alguien añada su ruta en
+`src/providers/cursor.ts`.
+
+---
+
+## La regla que gobierna todo: solo lectura
+
+Las carpetas de tus herramientas (`~/.claude`, `~/.codex`, `~/.cursor`, `~/.opencode`) se
+tratan como **estrictamente de solo lectura**. No es una promesa, es una restricción del código:
 
 - Todo acceso a disco ajeno pasa por `src/core/paths.ts`, que abre con `O_RDONLY`.
-- `assertReadOnly(path, "write")` lanza si la ruta cae bajo una raíz externa. Hay test.
-- Denylist dura por ruta: `.credentials.json`, `.env*`, `*.key`, claves SSH — no se leen siquiera.
-- Todo lo que el Motor escribe vive en `agent-engine/data/`.
+- `assertReadOnly(ruta, "write")` lanza una excepción si la ruta cae bajo una raíz externa.
+  Hay test que lo comprueba.
+- **Denylist dura por ruta**: `.credentials.json`, `.env*`, `*.key` y claves SSH ni siquiera
+  se leen.
+- Todo lo que el Motor escribe vive en `data/`, dentro del propio proyecto.
+
+Cursor guarda sus bases en modo WAL y las escribe mientras la app está abierta. Abrirlas en
+sitio, aunque sea en `readonly`, haría que SQLite quisiera crear un `-shm` junto al original —
+eso ya sería escribir en carpeta ajena. Por eso el adapter **copia** los `.db` (con su `-wal` y
+`-shm`) a `data/cursor-cache/` y lee la copia. Hay test que crea una base WAL de juguete y
+verifica que el directorio de origen queda byte a byte igual tras leer.
 
 ## Privacidad
 
-- Local first: el servidor escucha solo en `127.0.0.1`.
-- Sin telemetría propia, sin analytics, sin dependencias externas en runtime (cero `node_modules`).
-- No se sube ni un transcript a ningún servicio.
-- No se almacena texto de conversación: solo el título de sesión y el primer prompt truncado a
-  200 caracteres, ya redactado. Los cuerpos de los mensajes nunca entran a la base.
-- Redacción de secretos (`src/core/redact.ts`) en ingesta y otra vez al servir memoria y skills.
+- El servidor escucha **solo en `127.0.0.1`**.
+- Cero telemetría, cero analytics, cero dependencias en runtime.
+- **No se sube ni un transcript a ningún sitio.**
+- **No se almacena el texto de las conversaciones.** Solo el título de la sesión y el primer
+  prompt, truncado a 200 caracteres y ya redactado. Los cuerpos de los mensajes nunca entran
+  a la base.
+- Redacción de secretos (`src/core/redact.ts`) en la ingesta y otra vez al servir memoria y
+  skills: claves de Anthropic/OpenAI/GitHub/Slack/AWS/Google, JWT, claves privadas, cabeceras
+  `Authorization`/`Cookie` y asignaciones tipo `PASSWORD=`.
+- `data/` está en `.gitignore`: la base, la caché de Cursor y las exportaciones **no se suben**.
+
+Si vas a publicar una captura del dashboard, ten en cuenta que muestra títulos de sesión y
+rutas de proyecto reales.
+
+---
 
 ## Costes
 
-`config/pricing.json` es la única fuente de tarifas — nunca hay precios en el código.
-Cada vendor lleva su origen y su fecha en `sources`; ambos verificados el 2026-08-27:
+`config/pricing.json` es la **única** fuente de tarifas; nunca hay precios en el código. Cada
+vendor lleva su origen y su fecha de verificación:
 
 | Vendor | Fuente | Modelos |
 |---|---|---|
 | anthropic | <https://platform.claude.com/docs/en/about-claude/pricing> | Fable/Mythos 5, Opus 5→4, Sonnet 5→4, Haiku 4.5/3.5 |
 | openai | <https://developers.openai.com/api/docs/pricing> | gpt-5.6 (sol/terra/luna), 5.5, 5.4 (+mini/nano/pro), 5.3-codex, 5.2, 5.1, 5, mini, nano |
 
-Un modelo sin tarifa se marca `UNVERIFIED`, su coste cuenta como 0 y aparece como aviso en
-Overview y en las recomendaciones. Nunca se inventa un precio.
+Un modelo sin tarifa se marca `UNVERIFIED`, su coste cuenta como 0 y aparece como aviso en el
+dashboard y en las recomendaciones. **Nunca se inventa un precio.**
 
-**Los dos vendors cobran la caché distinto y el motor lo respeta:**
+Para añadir o corregir una tarifa, edita `config/pricing.json` y actualiza `verifiedAt`. No
+hace falta tocar código.
 
-- Anthropic cobra la *escritura* de caché con recargo — 1,25x a 5 min, 2x a 1 h — y la lectura
-  a 0,1x.
-- OpenAI **no cobra extra la escritura**: se factura a precio de input normal. Solo la lectura
-  es más barata (0,1x). Por eso sus modelos llevan `cacheWrite5m = cacheWrite1h = input`.
+**Los dos vendors cobran la caché distinto, y el motor lo respeta:**
 
-También se aplican fast mode (Opus 5/4.8 y gpt-5.3-codex) y el multiplicador 1,1x de
+- **Anthropic** cobra la *escritura* de caché con recargo (1,25x a 5 min, 2x a 1 h) y la
+  lectura a 0,1x.
+- **OpenAI** no cobra extra la escritura: va a precio de input normal; solo la lectura es más
+  barata. Por eso sus modelos llevan `cacheWrite5m = cacheWrite1h = input`.
+
+También se aplican el *fast mode* (Opus 5/4.8 y gpt-5.3-codex) y el multiplicador 1,1x de
 `inference_geo: "us"` de Anthropic.
 
-> **Los costes son estimaciones a tarifa API.** Si la sesión corrió bajo una suscripción
-> (Pro/Max), el coste marginal real fue distinto. El número mide consumo, no factura.
+> ### Los costes son estimaciones a tarifa API
+> Si tus sesiones corrieron bajo una suscripción (Claude Pro/Max, ChatGPT Plus…), el coste
+> marginal real fue distinto — probablemente cero. **El número mide consumo, no tu factura.**
+
+---
+
+## Funciones del dashboard
+
+- **Overview** — gasto de hoy / 7 / 30 días, coste por modelo y proyecto, desglose de tokens.
+- **Costes** — series diaria, semanal y mensual.
+- **Sesiones** — tabla ordenable y buscable; cada sesión se abre en detalle.
+- **Actividad** — procesos vivos, sesiones recientes, herramientas, skills, subagentes, MCP,
+  actividad por hora y por día de la semana.
+- **Cursor** — % de código escrito por IA, autoría por rama, sesiones y modelos.
+- **Memoria** — inventario de la memoria persistente, con redacción.
+- **Skills** — qué skills tienes y cuáles usas de verdad.
+- **Grafo** — proyectos ↔ herramientas / skills / subagentes.
+- **Mejoras** — recomendaciones automáticas (ver abajo).
+
+**Filtros** por rango de fechas (con presets), proveedor y proyecto. Viven en la URL, así que
+una vista concreta se comparte, se recarga y funciona con atrás/adelante del navegador.
+
+**Exportar** escribe JSON + CSV en `data/exports/`, respetando el filtro activo. El JSON declara
+qué secciones se filtraron y cuáles no, con el motivo.
+
+**PDF** imprime la vista actual con su filtro, usando el motor de impresión del navegador.
+
+**Tema** claro / oscuro / sistema, e **idioma** español / inglés con detección automática.
+
+## Sistema de mejoras
+
+Analiza lo indexado y **propone**, nunca aplica. Las recomendaciones se guardan en
+`data/recommendations.json`; el Motor jamás modifica la configuración de tus herramientas.
+
+Detecta: sesiones desproporcionadamente caras, reuso pobre de caché, contextos gigantes,
+herramientas casi sin usar, prompts repetidos candidatos a skill, proyectos con mucha ejecución
+manual de comandos, y modelos sin tarifa.
+
+---
 
 ## Arquitectura
 
 ```
 config/pricing.json        tarifas, desacopladas del código
-src/core/paths.ts          guard read-only, denylist, lectura por offset
+src/core/paths.ts          guard de solo lectura, denylist, lectura por offset
 src/core/redact.ts         detección y redacción de secretos
 src/core/pricing.ts        normalización de modelos + motor de coste
+src/core/jsonl.ts          lectura incremental de JSONL, compartida entre adapters
 src/core/db.ts             esquema SQLite
 src/core/analytics.ts      consultas de overview, costes, sesiones, actividad, grafo
-src/core/inventory.ts      skills, memoria y sesiones vivas (escaneo en caliente)
-src/core/recommend.ts      sistema de mejoras (propone, nunca aplica)
-src/providers/claude.ts    parser + indexador incremental de transcripts JSONL
-src/providers/cursor.ts    adapter de Cursor (state.vscdb + ai-code-tracking.db)
-src/providers/codex.ts     adapter de OpenAI Codex CLI (rollouts JSONL)
-src/providers/opencode.ts  adapter de OpenCode (storage/session|message|part)
-src/providers/registry.ts  registro de los cuatro adapters
-src/core/jsonl.ts          lectura por offset de JSONL, compartida entre adapters
-src/core/export.ts         exportacion a JSON y CSV
+src/core/inventory.ts      skills, memoria y procesos vivos (escaneo en caliente)
+src/core/recommend.ts      sistema de mejoras
+src/core/export.ts         exportación a JSON y CSV
+src/providers/*.ts         un adapter por herramienta + registro
 src/server/server.ts       API HTTP + estáticos
-web/                       dashboard (HTML/CSS/JS, gráficos SVG a mano)
+web/                       dashboard (HTML/CSS/JS, gráficos SVG a mano, sin frameworks)
+test/engine.test.ts        30 tests
 ```
 
-## Indexación incremental
+**El backend no manda prosa.** Las notas de proveedor y las recomendaciones viajan como clave
+de traducción + números (`{ id: "cache-churn", params: { written: 833.8, read: 44310 } }`); el
+texto lo pone el front. Así no hay dos copias del mismo párrafo ni un backend decidiendo
+presentación.
 
-`files(path, size, mtime, offset)` guarda el byte exacto hasta donde se leyó cada transcript.
-En cada pasada:
+### Indexación incremental
+
+`files(path, size, mtime, offset)` guarda el byte exacto hasta donde se leyó cada transcript:
 
 1. Si `size` y `mtime` no cambiaron → se salta el archivo entero.
 2. Si creció → se lee **solo** desde `offset`.
 3. Si encogió → se reindexa desde 0 (archivo reescrito).
-4. Una última línea sin `\n` (sesión escribiendo ahora mismo) no se consume: el offset se
-   queda antes y esa línea se lee completa en la pasada siguiente.
+4. Una última línea sin `\n` (una sesión escribiendo ahora mismo) no se consume: el offset se
+   queda antes y esa línea se lee entera en la pasada siguiente.
 
-Ningún archivo se carga entero en memoria: se lee en trozos de 4 MB. El transcript mayor
-de esta máquina pesa 402 MB.
+Ningún archivo se carga completo en memoria: se lee en trozos de 4 MB. En la máquina de
+desarrollo, con 1,5 GB de transcripts y un archivo suelto de 402 MB, la primera indexación
+tardó ~19 minutos y las siguientes 0,4 s.
 
-## Adapter de Cursor
+### Añadir una herramienta
 
-Cursor guarda sus bases en modo WAL y las escribe mientras la app está abierta. Abrirlas en
-sitio, aunque sea en `readonly`, haría que SQLite quisiera crear un `-shm` junto al original:
-eso sería escribir en carpeta ajena. Por eso el adapter **copia** `state.vscdb` (con su `-wal`
-y `-shm`) y `ai-code-tracking.db` a `data/cursor-cache/` y lee la copia. Hay test que lo
-verifica: tras leer, el directorio de origen queda byte a byte igual.
+Implementa la interfaz `Provider` de `src/core/types.ts`:
 
-La copia solo ocurre cuando cambian tamaño o mtime del original. `state.vscdb` pesa ~1 GB, así
-que una reindexación con Cursor activo cuesta unos segundos de copia.
-
-Lo que se extrae, todo con `json_extract` dentro de SQLite (22.500 tool calls en 3 s, sin
-parsear 317 MB de JSON en memoria):
-
-| Fuente | Qué da |
-|---|---|
-| `composerData:*` | título, modelo (`grok-4.5`, `composer-2.5-fast`, `gpt-5.5-medium`…), modo, líneas +/−, pico de contexto, nº de mensajes |
-| `composerHeaders` | fechas, workspace, si es subagente, si está archivada |
-| `bubbleId:*` | tool calls por nombre y sesión (`read_file_v2`, `ripgrep_raw_search`, `edit_file_v2`…) |
-| `scored_commits` | líneas de IA vs humano por commit y rama, con % de autoría |
-
-No se ingesta `ai_code_hashes`: son 23 filas sin modelo, con nombres de archivo como `.env`.
-Señal nula y riesgo de exponer rutas sensibles.
-
-## Adapter de Codex
-
-Codex CLI escribe un *rollout* JSONL por sesión en `~/.codex/sessions/YYYY/MM/DD/rollout-<ISO>-<uuid>.jsonl`
-(y `~/.codex/archived_sessions`). Cada línea es `{timestamp, ordinal?, type, payload}`:
-
-| `type` | Qué se saca |
-|---|---|
-| `session_meta` | id de hilo, `cwd`, `originator`, `cli_version`, y si es subagente (`parent_thread_id` / `agent_role`) |
-| `turn_context` | `model` y `reasoning_effort` (también dentro de `collaboration_mode.settings`) |
-| `event_msg` con `payload.type == "token_count"` | `info.total_token_usage`: `input_tokens`, `cached_input_tokens`, `cache_write_input_tokens`, `output_tokens`, `reasoning_output_tokens` |
-| `response_item` | tool calls (`function_call`, `local_shell_call`, `custom_tool_call`) y el primer mensaje del usuario como título |
-
-**La trampa:** `total_token_usage` es **acumulado de la sesión**, no del turno. Sumar todos los
-eventos `token_count` multiplica el consumo por el número de turnos — es exactamente el bug de
-inflación que reportaron en `ccusage` (issue #950). El adapter se queda con el máximo por sesión
-y hay un test que lo fija.
-
-También se resta `cached_input_tokens` del `input_tokens` reportado, porque el segundo ya
-incluye al primero: si no, los tokens de caché se cuentan dos veces.
-
-## Adapter de OpenCode
-
-OpenCode guarda un JSON por entidad bajo `Global.Path.data/storage` (en Windows,
-`~/.local/share/opencode/storage`; respeta `XDG_DATA_HOME`):
-
-```
-storage/session/<projectID>/<sessionID>.json
-storage/message/<sessionID>/<messageID>.json
-storage/part/<messageID>/<partID>.json
+```ts
+export const miProvider: Provider = {
+  id: "mitool",
+  label: "Mi Herramienta",
+  detect() { /* { installed, root, note: "clave.i18n", noteParams } */ },
+  index(db) { /* devuelve { files, newBytes, messages } */ },
+};
 ```
 
-El fichero de sesión **ya trae los totales agregados**, así que no hay que recorrer los
-mensajes para saber lo que costó: `tokens {input, output, reasoning, cache {read, write}}`,
-`cost`, `model {id, providerID}`, `title`, `agent`, `directory`, `version`, `parentID`
-(subagente) y `summary {additions, deletions, files}`.
+Regístralo en `src/providers/registry.ts` y añade sus textos a `web/i18n.js`. Reglas de la
+casa: **nunca escribas** en la carpeta de la herramienta, usa `assertReadOnly`, pasa los textos
+libres por `redact()` y respeta el gate de frescura por `size`+`mtime`.
 
-**OpenCode calcula su propio coste**, y es el único de los cuatro que lo hace. El adapter usa
-ese número tal cual y solo recurre a `config/pricing.json` si falta. Los modelos vienen como
-`anthropic/claude-sonnet-5`, así que `normalizeModel` aprendió a quitar el prefijo de proveedor.
+---
 
-Las tool calls salen de las partes (`part/<messageID>/*.json` con `type: "tool"`), y también
-se lee la forma antigua (`metadata.tool` dentro del mensaje) por si el almacén viene de una
-versión anterior.
+## Trampas de medición que este proyecto ya pisó
 
-## Idioma
+Documentadas porque cualquiera que mida lo mismo se las va a encontrar:
 
-Español e inglés, con un botón en la cabecera. Precedencia: **URL > lo que elegiste antes >
-el navegador**.
-
-La detección recorre `navigator.languages` **en orden**, no solo la primera, y compara por la
-subetiqueta primaria:
-
-| `navigator.languages` | Idioma |
-|---|---|
-| `["es-ES"]`, `["es-419"]`, `["pt-BR","es-AR"]` | español |
-| `["en-GB"]`, `["de-DE","en-US","es"]` | inglés |
-| `["fr-FR","es-ES","en"]` | español — se respeta que prefiera español al inglés |
-| `["ja-JP","ko"]`, lista vacía | inglés |
-
-Un navegador que no habla ninguno de los dos recibe **inglés**, no español: es lo más legible
-para alguien que tiene el navegador en alemán o japonés. La elección se persiste en cuanto se
-resuelve, así que quitar `?lang=` de la URL no devuelve al idioma anterior.
-
-**El backend no manda prosa.** Las notas de proveedor y las recomendaciones viajan como
-**clave + números** (`{ id: "cache-churn", params: { written: 833.8, read: 44310 } }`) y el
-texto lo pone el front. Así no hay dos copias del mismo párrafo ni un backend decidiendo
-presentación. El único texto traducido en el servidor es el de los motivos de «no filtrado»
-que se escriben dentro del JSON exportado, y ese endpoint recibe `?lang=`.
-
-Todo el diccionario vive en `web/i18n.js`. Cuatro tests lo vigilan:
-
-- los dos idiomas tienen exactamente las mismas claves;
-- toda clave que usa `app.js` existe en ambos;
-- cada nota de proveedor y cada recomendación tiene título y detalle en ambos;
-- los parámetros `{{x}}` coinciden entre idiomas (un `{{n}}` que falte en la traducción
-  dejaría un hueco en la frase).
-
-Los números y las fechas se formatean con el locale activo (`es-ES` / `en-US`); el dinero
-siempre en formato USD, que es la moneda de las tarifas.
-
-## Filtros
-
-Overview, Costes, Sesiones y Actividad llevan una barra con **presets · desde / hasta ·
-proveedor · proyecto**. El filtro vive en el cliente y viaja como query string a la API, así que
-se mantiene al cambiar de pestaña.
-
-Presets: `Todo · Hoy · 7 días · 30 días · Este mes`. Se calculan en UTC, igual que los
-timestamps guardados, y el chip activo se deduce del rango: si escribes a mano las fechas de
-"este mes", se ilumina solo.
-
-**El filtro vive en la URL**, así que una vista concreta se comparte, se recarga y se navega
-con atrás/adelante:
-
-```
-/?view=costs&from=2026-08-01&to=2026-08-10&provider=claude&sort=cost
-/?session=98f09eca-17e2-42d5-93a1-fe44c517756a
-```
-
-Las fechas van en corto (`YYYY-MM-DD`) y el rango completo se reconstruye al leer. Los
-parámetros se validan: una fecha inventada (`from=basura`, `to=2026-99-99`) o un orden
-desconocido se ignoran y la URL se normaliza sola, en vez de dejar un `$0.00` sin explicación.
-Una URL de sesión abierta en frío no trae pestaña de origen, así que se marca Sesiones — que es
-adonde lleva el botón Volver.
-
-- Las fechas se escriben en **dd/mm/aaaa**. El `<input type="date">` nativo no deja elegir el
-  formato —lo impone el locale del navegador, que aquí mostraba `mm/dd/aaaa`—, así que el campo
-  es de texto y el calendario del sistema sigue disponible en el botón de al lado
-  (`showPicker()` sobre un `date` oculto). Una fecha imposible como `31/02/2026` marca el campo
-  en rojo y **no** filtra, en vez de colar una fecha silenciosamente corrida.
-- `hasta` cubre el día entero (`T23:59:59.999Z`). Si cortara a medianoche se perdería todo lo
-  de ese día, que es justo lo que uno espera ver al escribirlo.
-- Las tool calls no llevan proveedor propio, así que en Actividad se acotan por las sesiones
-  que pasan el filtro, no por la herramienta.
-- Las tarjetas Hoy / 7 días / 30 días siguen siendo periodos absolutos —eso es lo que
-  significan— pero respetan el filtro de proveedor.
-- Los desplegables se llenan desde `/api/facets`, que **no aplica el filtro**. Si se filtraran,
-  elegir un proyecto de una sola sesión vaciaría su propio desplegable y no habría cómo volver.
-- **La barra solo aparece donde el filtro se aplica de verdad.** Memoria, Skills, Cursor, Grafo
-  y Mejoras no la muestran, en vez de enseñar unos controles que no harían nada.
-- **El filtro corta mensajes, no sesiones.** Si cortara sesiones, una que roza el rango
-  aportaría su coste entero y la suma no cuadraría con el total de Overview. Hay test que lo fija.
-- Las tool calls se acotan por sesión **y** por tiempo, por el mismo motivo.
-
-## Exportar
-
-El botón **Exportar** de la cabecera escribe tres archivos en `data/exports/`:
-
-| Archivo | Qué lleva |
-|---|---|
-| `motor-agentico-<ts>.json` | el volcado completo: overview, series diaria/semanal/mensual, 1000 sesiones, actividad, skills, memoria, Cursor, recomendaciones y las tarifas con su fecha de verificación |
-| `sesiones-<ts>.csv` | una fila por sesión, 19 columnas: proveedor, proyecto, título, duración, tokens desglosados, coste y tool calls |
-| `coste-diario-<ts>.csv` | la serie diaria, lista para una hoja de cálculo |
-
-**La exportación respeta el filtro activo.** Los archivos llevan sufijo `-filtrado` y el JSON
-abre con un bloque `filter` que dice qué se aplicó y, sección por sección, qué **no** se pudo
-acotar y por qué:
-
-```json
-"filter": {
-  "applied": { "from": "...", "to": "...", "provider": "claude" },
-  "appliedTo": ["overview","daily","weekly","monthly","sessions","activity","skills.uses"],
-  "notApplied": {
-    "memory": "los archivos de memoria son del disco: no cuelgan de una sesion ni de una fecha",
-    "cursor": "Cursor tiene su propio almacen y no comparte el eje de proveedor/proyecto",
-    "recommendations": "se calculan sobre todo el historico; acotarlas cambiaria lo que significan"
-  }
-}
-```
-
-Un volcado a medio filtrar sin decirlo se malinterpreta; diciéndolo, es útil.
-
-Escribe a disco en vez de disparar una descarga del navegador: así funciona igual aunque el
-navegador bloquee descargas, y los archivos quedan junto al Motor. Para descargar de verdad
-desde un navegador normal están `GET /api/export` y `GET /api/export?format=csv`, con su
-`Content-Disposition`.
-
-El CSV entrecomilla y dobla comillas como manda el formato: un título con una coma no corre
-las columnas del resto de la fila, y hay test que lo fija. La exportación de memoria **no
-incluye el cuerpo de los archivos**, solo sus metadatos, y todo pasa por la misma redacción
-de secretos que el dashboard.
-
-## PDF
-
-El botón **PDF** imprime la vista que estás mirando, con su filtro. Lo genera el navegador:
-sin librerías de PDF, sin Chrome headless, sin servicio externo. En el diálogo, «Guardar como PDF».
-
-Antes de imprimir se inserta un encabezado que solo existe en el papel y que deja constancia de
-qué es ese PDF: vista, rango de fechas, proveedor, proyecto, sesión si es un detalle, y fecha de
-generación. Se quita solo al terminar (`afterprint`, con respaldo por tiempo si el navegador no
-lo manda).
-
-La hoja `@media print` esconde cabecera, pestañas, filtros, botones y los `<details>` plegados,
-fuerza colores claros aunque estés en tema oscuro, y evita que se partan filas, tarjetas,
-gráficos y listas de barras entre páginas. El aviso de «Mostrando 60 de 269» **sí** se imprime:
-un PDF con la tabla recortada tiene que decirlo.
-
-Revisado sobre PDFs reales generados con Chrome headless (`--print-to-pdf`) y rasterizados
-página a página. Lo que se corrigió al mirarlos:
-
-| Defecto | Causa | Arreglo |
-|---|---|---|
-| La tabla de Sesiones perdía Tokens, Tools y Coste | `white-space: nowrap` en las cabeceras impedía que encogiera al ancho imprimible (688px) | `table-layout: fixed` + cabeceras con salto |
-| «Input» quedaba huérfano en la página siguiente, lejos de su título | la lista de barras se partía por la mitad | `break-inside: avoid` en `.rows` |
-| Banda gris al pie de las métricas | los separadores eran hueco con el fondo del contenedor asomando; con la última fila incompleta se veía la banda entera | separadores por borde en cada celda |
-| Última etiqueta del eje X cortada | `text-anchor: middle` la sacaba fuera del `viewBox` | primera y última ancladas al borde |
-
-Confirmado en el PDF: el `<thead>` se repite en cada página y ninguna fila se parte.
-
-### Un artefacto de Chrome que no se pudo quitar
-
-En una tabla que cruza páginas, Chrome repite el `<thead>` (bien) pero dibuja los glifos
-**no-ASCII de esa cabecera repetida** en la coordenada de la cabecera *original*. El resultado:
-la página 1 muestra `DURACIÓN` con tilde, la página 2 muestra `DURACION` sin ella, y la tilde
-aparece suelta al pie de la página 1 como una marca de ~1 mm.
-
-Cómo se localizó: descomprimiendo los content streams del PDF con `node:zlib`. El último
-operador de la página era `/F10 12.5 Tf … <79> Tj` — un solo glifo, y el `ToUnicode` de esa
-fuente mapea `<79>` a `U+00D3`, es decir `Ó`.
-
-Se probó sin éxito: fuente estática en vez de variable, fuente empotrable con licencia OFL,
-separador de fila arriba en vez de abajo, y `border-collapse: separate`. Todas las cabeceras
-resuelven a una sola fuente en layout (`CSS.getPlatformFontsForNode` lo confirma); el reparto
-lo hace el exportador de PDF, no el motor de layout.
-
-Lo único que lo elimina es no repetir la cabecera. Si la marca molesta más que perder los
-rótulos en las páginas 2 y siguientes, hay una línea comentada en `web/style.css`:
-
-```css
-@media print { thead { display: table-row-group; } }
-```
-
-## Sistema de mejoras
-
-`bun run audit` (o la pestaña Mejoras) genera recomendaciones y las guarda en
-`data/recommendations.json`. **El Motor nunca aplica cambios ni toca la configuración de
-Claude Code.** Detecta: sesiones desproporcionadamente caras, reuso pobre de cache,
-contextos gigantes, herramientas casi sin uso, prompts repetidos candidatos a skill,
-proyectos con mucha ejecución manual de comandos, y modelos sin tarifa.
+- **El consumo acumulado no se suma.** El `total_token_usage` de Codex es acumulado por sesión,
+  no por turno; sumar los eventos multiplica el gasto por el número de turnos. (Es el bug de
+  inflación 91x que reportaron en `ccusage`.) Se toma el máximo.
+- **El input reportado ya incluye el cacheado.** Hay que restarlo o los tokens de caché se
+  cuentan dos veces.
+- **El filtro corta mensajes, no sesiones.** Si corta sesiones, una que roza el rango aporta su
+  coste entero y la suma deja de cuadrar con el total. Hay test que fija el invariante.
+- **La escritura de caché no cuesta lo mismo en todos los vendors.** Ver la sección de costes.
+- **Los desplegables de filtro se llenan sin filtrar.** Si se filtraran, elegir un proyecto de
+  una sola sesión vaciaría su propio desplegable y no habría cómo volver atrás.
 
 ## Limitaciones conocidas
 
-- **Coste ≠ factura.** Ver la nota de arriba.
-- **Cursor no expone tokens por petición ni coste** (todos los `tokenCount` de sus mensajes
-  vienen en 0). Su pestaña muestra lo que sí registra: sesiones, modelo, modo, tool calls,
-  líneas escritas y el % de código con autoría de IA por commit. No entra en las cifras de
-  dinero, que son solo de Claude Code.
-- El pico de contexto de una sesión de Cursor es la última medición de esa sesión, no un
-  acumulado: no es comparable con los tokens consumidos de Claude Code.
-- **El adapter de Codex no se ha probado contra datos reales**: Codex CLI no está instalado en
-  esta máquina. El formato se verificó leyendo el código fuente de `openai/codex`, y el parser
-  se prueba con un fixture que reproduce ese esquema. El día que instales Codex, `bun run index`
-  lo recoge solo; si el formato hubiera cambiado, se verá como sesiones sin tokens, no como datos
-  inventados.
-- **El adapter de OpenCode tampoco se ha probado con datos reales**: está instalado (v1.18.10)
-  pero nunca se ha usado, su almacén está vacío. El formato se verificó contra el código de
-  `anomalyco/opencode` y el adapter se prueba de punta a punta con un almacén sintético.
-- Se cuentan los procesos de Claude Code vivos (PID en `~/.claude/sessions`), pero **no se
-  empareja un PID con su transcript**: no hay ningún campo que los una. En su lugar el
-  dashboard lista qué sesiones escribieron en los últimos 10 minutos, que sí es comprobable.
-- «Usos» de una skill cuenta invocaciones vía la herramienta `Skill`. Una skill cargada por
-  otra vía (hook, `SessionStart`) no aparece.
-- Los tokens de un mensaje se atribuyen al día del mensaje, no al de facturación.
+- **Coste ≠ factura.** Ver arriba.
+- **Cursor no registra tokens por petición** (todos vienen en 0), así que no entra en las cifras
+  de dinero. Su pestaña mide lo que sí guarda: autoría, sesiones, modelos, herramientas.
+- El pico de contexto de una sesión de Cursor es la última medición, no un acumulado.
+- **No se empareja un PID con su sesión**: ningún campo los une. Se muestran los procesos vivos
+  y, aparte, qué sesiones escribieron en los últimos 10 minutos.
+- «Usos» de una skill cuenta invocaciones vía la herramienta `Skill`; una skill cargada por hook
+  o `SessionStart` no deja rastro.
+- Los tokens se atribuyen al día del mensaje, no al de facturación.
+- **Bug de Chrome al imprimir**: en una tabla que cruza páginas, los glifos no-ASCII de la
+  cabecera repetida (la Ó de «DURACIÓN») se dibujan en la coordenada de la cabecera original y
+  aparecen sueltos al pie como una marca de ~1 mm. Hay un interruptor comentado en
+  `web/style.css` para desactivar la repetición de cabecera si molesta más que perder los
+  rótulos.
 
-## Mejoras futuras
+## Estado
 
-- Adapter real para Cursor (actividad de edición, sin coste).
-- Watcher de sistema de archivos para indexar en vivo en lugar de por botón.
-- Coste efectivo bajo suscripción, si algún día hay una fuente local de cupo consumido.
-- Búsqueda de texto completo sobre transcripts, con redacción, opcional y desactivada por defecto.
+Funciona y está en uso. No tiene CI, ni versionado semántico, ni promesa de compatibilidad.
+Los issues y PRs son bienvenidos, sobre todo:
+
+- rutas de Cursor en macOS/Linux;
+- confirmación de los adapters de Codex y OpenCode contra instalaciones reales;
+- tarifas nuevas o corregidas en `config/pricing.json`.

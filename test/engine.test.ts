@@ -83,7 +83,7 @@ test("la redaccion no destroza texto normal (falsos positivos)", () => {
 test("guard read-only: escribir en una raiz externa lanza", () => {
   expect(isForeign(join(HOME, ".claude", "settings.json"))).toBe(true);
   expect(isForeign(join(HOME, ".claude-otro"))).toBe(false);
-  expect(isForeign("C:/laragon/www/agent-engine/data/engine.db")).toBe(false);
+  expect(isForeign("C:/dev/agent-engine/data/engine.db")).toBe(false);
   expect(() => assertReadOnly(join(HOME, ".claude", "settings.json"), "write")).toThrow(/READ-ONLY/);
   expect(() => assertReadOnly(join(HOME, ".claude", "x.jsonl"), "read")).not.toThrow();
   expect(isDenied(join(HOME, ".claude", ".credentials.json"))).toBe(true);
@@ -118,7 +118,7 @@ test("indexacion incremental: solo lee lo nuevo y respeta lineas parciales", () 
 });
 
 test("proyecto codificado se decodifica a ruta legible", () => {
-  expect(decodeProject("C--laragon-www-CashShip")).toBe("C:\\laragon\\www\\CashShip");
+  expect(decodeProject("C--dev-proyectos-Demo")).toBe("C:\\dev\\proyectos\\Demo");
 });
 
 test("cursor: se lee una COPIA, el original no se toca", () => {

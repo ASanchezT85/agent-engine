@@ -10,7 +10,7 @@ import type { Provider, Usage } from "../core/types";
 export const CLAUDE_ROOT = join(HOME, ".claude");
 const PROJECTS = join(CLAUDE_ROOT, "projects");
 
-/** `C--laragon-www-CashShip` -> `C:\laragon\www\CashShip` (mejor esfuerzo, solo cosmetico) */
+/** `C--dev-proyectos-Demo` -> `C:\dev\proyectos\Demo` (mejor esfuerzo, solo cosmetico) */
 export function decodeProject(dir: string): string {
   if (/^[A-Za-z]--/.test(dir)) return dir[0] + ":\\" + dir.slice(3).replace(/-/g, "\\");
   return dir.replace(/^-/, "/").replace(/-/g, "/");
