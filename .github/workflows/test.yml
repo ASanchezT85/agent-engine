@@ -1,13 +1,20 @@
-# El badge de este workflow esta fuera del README a proposito: la cuenta tiene Actions
-# bloqueado por facturacion, el job no llega a arrancar y el badge saldria "failing"
-# sin que ningun test falle. Se vuelve a poner cuando Actions pueda correr.
-# En local: bun test  (30 tests)
+# DESACTIVADO A PROPOSITO. La cuenta tiene Actions bloqueado por facturacion: el job
+# no llega ni a arrancar, falla en 2 segundos y marca cada commit con una X roja como
+# si los tests estuvieran rotos. No lo estan (30/30 en local, `bun test`).
+#
+# Solo se dispara a mano desde la pestaña Actions. Para volver a lo normal, cuando
+# Actions pueda correr, sustituye `workflow_dispatch:` por:
+#
+#   push:
+#     branches: [master]
+#   pull_request:
+#
+# y devuelve el badge al README:
+#   [![tests](https://github.com/ASanchezT85/agent-engine/actions/workflows/test.yml/badge.svg)](https://github.com/ASanchezT85/agent-engine/actions/workflows/test.yml)
 name: tests
 
 on:
-  push:
-    branches: [master]
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   test:
